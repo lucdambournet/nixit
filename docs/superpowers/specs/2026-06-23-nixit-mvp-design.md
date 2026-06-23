@@ -69,7 +69,18 @@ When a user taps the help button, the app:
 
 ### 6. Tap out and rejoin
 
-Users can tap out of their active cohort through a dedicated flow. After tap-out, they may join a new cohort in a future month.
+The tap-out button is available on the cohort dashboard. When pressed, the user enters a multi-step tap-out flow:
+- select or enter a reason for leaving the cohort,
+- review and confirm the tap-out decision,
+- the app posts an automatic tap-out request message to the cohort chat.
+
+The cohort must approve the tap-out before the user is removed from the cohort. Approval requires consent from at least half of the cohort's "active" users.
+
+"Active" users are defined as cohort members who have opened the NixIt app at least once in the last 24 hours.
+
+The tap-out approval appears in the cohort chat as a highlighted system message with the user’s reason and a live approval count. Active members can tap an "Approve tap-out" button directly in chat; once the required majority is reached, a follow-up system message confirms the tap-out and the user is removed from the cohort.
+
+Once the tap-out request receives the required approvals, the user is removed from the cohort and may join a new future Nix Date cohort.
 
 ## Pages and Navigation
 
