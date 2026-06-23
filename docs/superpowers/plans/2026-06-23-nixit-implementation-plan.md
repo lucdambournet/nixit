@@ -6,6 +6,8 @@ Date: 2026-06-23
 
 This implementation plan follows the approved MVP design for NixIt, focusing on cohort sign-up, shared quitting timeline, cohort chat, help alerts, tap-out approval, and mobile push notifications.
 
+Supabase will be used as the backend platform for database storage, authentication, and realtime features where practical.
+
 ## Features
 
 1. Email/password signup and profile creation

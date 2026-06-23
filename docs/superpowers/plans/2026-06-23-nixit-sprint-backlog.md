@@ -4,6 +4,8 @@ Date: 2026-06-23
 
 This sprint backlog breaks the approved MVP plan into four sprint-ready batches with features, stories, and tasks.
 
+Supabase is the chosen backend platform for auth, database storage, and realtime cohort/chat support.
+
 ## Sprint 1: Core auth, cohort enrollment, and dashboard
 
 ### Goals
