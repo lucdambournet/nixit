@@ -40,6 +40,7 @@ Supabase is the chosen backend platform for auth, database storage, and realtime
 ### Tasks
 
 #### Backend
+- set up Supabase project, configure database tables, auth, and realtime
 - create `User`, `Cohort`, and `NixDate` models
 - build auth/signup endpoint with profile creation
 - build `GET /cohorts` or `GET /nix-dates`

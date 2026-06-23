@@ -86,13 +86,14 @@ Supabase will be used as the backend platform for database storage, authenticati
 
 ### Backend
 
-- Define and implement data models:
+- Set up Supabase project and configure database, auth, and realtime services
+- Define and implement data models in Supabase:
   - User
   - Cohort
   - ChatMessage
   - TapOutRequest
   - NotificationSubscription
-- Implement authentication endpoints and profile creation
+- Implement authentication endpoints and profile creation using Supabase Auth
 - Implement cohort and Nix Date APIs:
   - list available cohorts
   - join cohort
