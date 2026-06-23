@@ -110,3 +110,71 @@ label {
   gap: 1rem;
   flex-wrap: wrap;
 }
+
+.avatar-upload {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.avatar-preview {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid rgba(99, 91, 255, 0.3);
+}
+
+.avatar-upload-btn {
+  background: rgba(99, 91, 255, 0.08);
+  color: #635bff;
+  border: 1px solid rgba(99, 91, 255, 0.3);
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.avatar-upload-btn:hover {
+  background: rgba(99, 91, 255, 0.15);
+}
+
+.muted {
+  color: rgba(31, 31, 58, 0.5);
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.link-button {
+  background: none;
+  border: none;
+  padding: 0;
+  color: #635bff;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: 0;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.link-button:disabled {
+  opacity: 0.5;
+}
+
+@media (max-width: 480px) {
+  .page-shell {
+    padding: 1.25rem 0.75rem;
+  }
+
+  h1 {
+    font-size: 1.75rem;
+  }
+
+  .list-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .list-item button {
+    width: 100%;
+  }
+}

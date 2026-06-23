@@ -2,38 +2,49 @@ import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useNavigate } from 'react-router-dom';
 
-export type NixDate = {
+type Cohort = {
   id: string;
-  month: string;
-  start_date: string;
   member_count: number;
+  max_members: number;
+  status: string;
+  nix_date: {
+    month: string;
+    start_date: string;
+  };
 };
 
 function Enrollment() {
   const navigate = useNavigate();
-  const [nixDates, setNixDates] = useState<NixDate[]>([]);
+  const [cohorts, setCohorts] = useState<Cohort[]>([]);
   const [loading, setLoading] = useState(true);
+  const [joining, setJoining] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const loadNixDates = async () => {
-      const { data, error } = await supabase.from('nix_dates').select('id,month,start_date,member_count').order('start_date', { ascending: true });
+    const loadCohorts = async () => {
+      const { data, error } = await supabase
+        .from('cohorts')
+        .select('id, member_count, max_members, status, nix_date:nix_date_id(month, start_date)')
+        .eq('status', 'upcoming')
+        .order('start_date', { ascending: true });
       if (error) {
         setError(error.message);
         setLoading(false);
         return;
       }
-      setNixDates(data ?? []);
+      setCohorts((data ?? []) as unknown as Cohort[]);
       setLoading(false);
     };
-    loadNixDates();
+    loadCohorts();
   }, []);
 
   const handleJoin = async (cohortId: string) => {
     setError(null);
-    const { error } = await supabase.rpc('join_cohort', { cohort_id: cohortId });
+    setJoining(cohortId);
+    const { error } = await supabase.rpc('join_cohort', { target_cohort_id: cohortId });
     if (error) {
       setError(error.message);
+      setJoining(null);
       return;
     }
     navigate('/dashboard');
@@ -43,22 +54,26 @@ function Enrollment() {
     <main className="page-shell">
       <h1>Join a NixIt cohort</h1>
       {loading ? (
-        <p>Loading available Nix Dates…</p>
+        <p>Loading available cohorts…</p>
       ) : (
         <div className="card list-card">
           {error && <p className="error-text">{error}</p>}
-          {nixDates.length === 0 ? (
+          {cohorts.length === 0 ? (
             <p>No cohorts available yet.</p>
           ) : (
-            nixDates.map((item) => (
-              <div key={item.id} className="list-item">
+            cohorts.map((cohort) => (
+              <div key={cohort.id} className="list-item">
                 <div>
-                  <strong>{item.month}</strong>
-                  <p>Starts {new Date(item.start_date).toLocaleDateString()}</p>
-                  <p>{item.member_count} members</p>
+                  <strong>{cohort.nix_date.month}</strong>
+                  <p>Starts {new Date(cohort.nix_date.start_date).toLocaleDateString()}</p>
+                  <p>{cohort.member_count} / {cohort.max_members} members</p>
                 </div>
-                <button type="button" onClick={() => handleJoin(item.id)}>
-                  Join
+                <button
+                  type="button"
+                  onClick={() => handleJoin(cohort.id)}
+                  disabled={joining === cohort.id || cohort.member_count >= cohort.max_members}
+                >
+                  {joining === cohort.id ? 'Joining…' : cohort.member_count >= cohort.max_members ? 'Full' : 'Join'}
                 </button>
               </div>
             ))

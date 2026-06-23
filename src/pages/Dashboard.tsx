@@ -21,9 +21,15 @@ function Dashboard() {
 
   useEffect(() => {
     const loadCohort = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        navigate('/login');
+        return;
+      }
       const { data, error } = await supabase
         .from('users')
         .select('active_cohort:active_cohort_id (month,start_date,member_count,status)')
+        .eq('id', user.id)
         .single();
       if (error) {
         setError(error.message);
@@ -31,8 +37,7 @@ function Dashboard() {
         return;
       }
       if (!data || !data.active_cohort) {
-        setError('No active cohort found.');
-        setLoading(false);
+        navigate('/enrollment');
         return;
       }
       const cohortData = data.active_cohort as unknown as { month: string; start_date: string; member_count: number; status: string };
@@ -40,7 +45,7 @@ function Dashboard() {
       setLoading(false);
     };
     loadCohort();
-  }, []);
+  }, [navigate]);
 
   useEffect(() => {
     if (!cohort) return;
