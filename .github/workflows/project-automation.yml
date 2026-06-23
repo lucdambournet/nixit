@@ -1,0 +1,103 @@
+name: Project Automation
+
+on:
+  issues:
+    types: [opened, labeled, unlabeled, closed]
+
+permissions:
+  issues: write
+  contents: read
+  actions: read
+  repository-projects: write
+
+jobs:
+  manage-project-card:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
+
+      - name: Get project ID and column IDs
+        id: ids
+        run: |
+          REPO=${{ github.repository }}
+          PROJECT_NAME="NixIt Board"
+          API_ACCEPT="application/vnd.github.inertia-preview+json"
+          AUTH_HEADER="Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}"
+          # find project
+          PROJECT_ID=$(curl -s -H "$AUTH_HEADER" -H "Accept: $API_ACCEPT" "https://api.github.com/repos/$REPO/projects" | jq -r ".[] | select(.name==\"$PROJECT_NAME\") | .id")
+          if [ -z "$PROJECT_ID" ] || [ "$PROJECT_ID" = "null" ]; then
+            echo "project_not_found=true" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          # get columns
+          TODO_COL=$(curl -s -H "$AUTH_HEADER" -H "Accept: $API_ACCEPT" "https://api.github.com/projects/$PROJECT_ID/columns" | jq -r '.[] | select(.name=="To do") | .id')
+          INPROG_COL=$(curl -s -H "$AUTH_HEADER" -H "Accept: $API_ACCEPT" "https://api.github.com/projects/$PROJECT_ID/columns" | jq -r '.[] | select(.name=="In progress") | .id')
+          DONE_COL=$(curl -s -H "$AUTH_HEADER" -H "Accept: $API_ACCEPT" "https://api.github.com/projects/$PROJECT_ID/columns" | jq -r '.[] | select(.name=="Done") | .id')
+          echo "project_id=$PROJECT_ID" >> $GITHUB_OUTPUT
+          echo "todo_col=$TODO_COL" >> $GITHUB_OUTPUT
+          echo "inprog_col=$INPROG_COL" >> $GITHUB_OUTPUT
+          echo "done_col=$DONE_COL" >> $GITHUB_OUTPUT
+
+      - name: Add or move card based on event
+        if: steps.ids.outputs.project_not_found != 'true'
+        env:
+          REPO: ${{ github.repository }}
+          ISSUE_URL: ${{ github.event.issue.html_url }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          AUTH_HEADER: "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}"
+          API_ACCEPT: application/vnd.github.inertia-preview+json
+        run: |
+          PROJECT_ID=${{ steps.ids.outputs.project_id }}
+          TODO_COL=${{ steps.ids.outputs.todo_col }}
+          INPROG_COL=${{ steps.ids.outputs.inprog_col }}
+          DONE_COL=${{ steps.ids.outputs.done_col }}
+
+          # Helper: find existing card for this issue
+          find_card() {
+            for col in "$TODO_COL" "$INPROG_COL" "$DONE_COL"; do
+              if [ "$col" = "null" ] || [ -z "$col" ]; then continue; fi
+              cards=$(curl -s -H "$AUTH_HEADER" -H "Accept: $API_ACCEPT" "https://api.github.com/projects/columns/$col/cards")
+              card_id=$(echo "$cards" | jq -r ".[] | select(.content_url==\"$ISSUE_URL\") | .id")
+              if [ -n "$card_id" ]; then
+                echo "$card_id"
+                return
+              fi
+            done
+            echo ""
+          }
+
+          # target column selection
+          target_col=""
+          if [ "${{ github.event.action }}" = "opened" ]; then
+            target_col=$TODO_COL
+          elif [ "${{ github.event.action }}" = "closed" ]; then
+            target_col=$DONE_COL
+          elif [ "${{ github.event.action }}" = "labeled" ]; then
+            label_name="${{ github.event.label.name }}"
+            if [ "$label_name" = "in-progress" ]; then
+              target_col=$INPROG_COL
+            elif [ "$label_name" = "todo" ]; then
+              target_col=$TODO_COL
+            fi
+          fi
+
+          if [ -z "$target_col" ] || [ "$target_col" = "null" ]; then
+            echo "No target column found for this event. Exiting."; exit 0
+          fi
+
+          # try to find existing card
+          CARD_ID=$(find_card)
+          if [ -n "$CARD_ID" ]; then
+            # move card to target column
+            echo "Moving existing card $CARD_ID to column $target_col"
+            curl -s -X POST -H "$AUTH_HEADER" -H "Accept: $API_ACCEPT" "https://api.github.com/projects/columns/cards/$CARD_ID/moves" -d "{\"position\": \"top\", \"column_id\": $target_col}"
+          else
+            # create a new card in the target column linking to the issue
+            echo "Creating new card in column $target_col"
+            ISSUE_ID=${{ github.event.issue.id }}
+            curl -s -X POST -H "$AUTH_HEADER" -H "Accept: $API_ACCEPT" "https://api.github.com/projects/columns/$target_col/cards" -d "{\"content_id\": $ISSUE_ID, \"content_type\": \"Issue\"}"
+          fi
+
+      - name: Done
+        run: echo "Project automation step complete."
