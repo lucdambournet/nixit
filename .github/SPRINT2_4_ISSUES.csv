@@ -1,0 +1,7 @@
+Add cohort chatroom and message backend|Build cohort chatroom support and message persistence: ChatMessage model/storage, GET /cohorts/:id/messages, POST /cohorts/:id/messages, message types, and chatroom UI.|backend,sprint|Sprint 2
+Implement help alert workflow and notification dispatch|Add help alert support and notification dispatch for cohort emergencies: help alert endpoint, push dispatch, dashboard alert button, and help-alert system messages.|backend,sprint|Sprint 2
+Add push notification service integration and token registration|Integrate browser/device push notification service and register tokens for help alerts and tap-out updates.|backend,sprint|Sprint 2
+Add notification preferences and in-app notification center|Add notification preference controls and in-app notification center: settings UI, preference model/API, badge UI, and push opt-in workflow.|frontend,sprint|Sprint 3
+Implement tap-out request, approval, and undo workflow|Enable cohort tap-out requests with approval, undo support, and approval tally display.|backend,sprint|Sprint 3
+Polish UI, responsive design, and onboarding transitions|Refine UI polish, responsive layout, and onboarding flow transitions for launch readiness.|frontend,sprint|Sprint 4
+Final tests, launch readiness, and bugfix validation|Complete end-to-end testing, cross-device validation, push notification verification, and remaining bugfix cleanup.|qa,sprint|Sprint 4

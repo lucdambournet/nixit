@@ -1,0 +1,33 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "pwa-chrome",
+      "request": "launch",
+      "name": "Launch NixIt in Chrome",
+      "url": "http://localhost:4173",
+      "webRoot": "${workspaceFolder}",
+      "preLaunchTask": "npm: dev",
+      "sourceMaps": true,
+      "trace": true,
+      "breakOnLoad": true,
+      "skipFiles": [
+        "**/node_modules/**",
+        "<node_internals>/**"
+      ]
+    },
+    {
+      "type": "pwa-node",
+      "request": "launch",
+      "name": "Run npm build",
+      "program": "${workspaceFolder}/node_modules/.bin/vite",
+      "args": ["build"],
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NODE_ENV": "production"
+      },
+      "console": "integratedTerminal",
+      "preLaunchTask": "npm: install"
+    }
+  ]
+}
