@@ -12,7 +12,7 @@ create table if not exists users (
 
 create table if not exists nix_dates (
   id uuid primary key default gen_random_uuid(),
-  month text not null,
+  month text not null unique,
   start_date date not null,
   created_at timestamptz not null default now()
 );

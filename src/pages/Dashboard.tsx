@@ -23,7 +23,7 @@ function Dashboard() {
     const loadCohort = async () => {
       const { data, error } = await supabase
         .from('users')
-        .select('active_cohort:active_cohort_id (month,start_date,member_count,status)')
+        .select('active_cohort:active_cohort_id (start_date,member_count,status,nix_dates(month))')
         .single();
       if (error) {
         setError(error.message);
@@ -35,8 +35,8 @@ function Dashboard() {
         setLoading(false);
         return;
       }
-      const cohortData = data.active_cohort as unknown as { month: string; start_date: string; member_count: number; status: string };
-      setCohort(cohortData);
+      const raw = data.active_cohort as unknown as { start_date: string; member_count: number; status: string; nix_dates: { month: string } };
+      setCohort({ month: raw.nix_dates.month, start_date: raw.start_date, member_count: raw.member_count, status: raw.status });
       setLoading(false);
     };
     loadCohort();

@@ -6,7 +6,7 @@ export type NixDate = {
   id: string;
   month: string;
   start_date: string;
-  member_count: number;
+  cohorts: { id: string; member_count: number; status: string }[];
 };
 
 function Enrollment() {
@@ -17,13 +17,16 @@ function Enrollment() {
 
   useEffect(() => {
     const loadNixDates = async () => {
-      const { data, error } = await supabase.from('nix_dates').select('id,month,start_date,member_count').order('start_date', { ascending: true });
+      const { data, error } = await supabase
+        .from('nix_dates')
+        .select('id,month,start_date,cohorts(id,member_count,status)')
+        .order('start_date', { ascending: true });
       if (error) {
         setError(error.message);
         setLoading(false);
         return;
       }
-      setNixDates(data ?? []);
+      setNixDates((data as NixDate[]) ?? []);
       setLoading(false);
     };
     loadNixDates();
@@ -31,7 +34,7 @@ function Enrollment() {
 
   const handleJoin = async (cohortId: string) => {
     setError(null);
-    const { error } = await supabase.rpc('join_cohort', { cohort_id: cohortId });
+    const { error } = await supabase.rpc('join_cohort', { target_cohort_id: cohortId });
     if (error) {
       setError(error.message);
       return;
@@ -50,18 +53,22 @@ function Enrollment() {
           {nixDates.length === 0 ? (
             <p>No cohorts available yet.</p>
           ) : (
-            nixDates.map((item) => (
-              <div key={item.id} className="list-item">
-                <div>
-                  <strong>{item.month}</strong>
-                  <p>Starts {new Date(item.start_date).toLocaleDateString()}</p>
-                  <p>{item.member_count} members</p>
+            nixDates.map((item) => {
+              const cohort = item.cohorts[0];
+              if (!cohort) return null;
+              return (
+                <div key={item.id} className="list-item">
+                  <div>
+                    <strong>{item.month}</strong>
+                    <p>Starts {new Date(item.start_date).toLocaleDateString()}</p>
+                    <p>{cohort.member_count} members</p>
+                  </div>
+                  <button type="button" onClick={() => handleJoin(cohort.id)}>
+                    Join
+                  </button>
                 </div>
-                <button type="button" onClick={() => handleJoin(item.id)}>
-                  Join
-                </button>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
       )}
