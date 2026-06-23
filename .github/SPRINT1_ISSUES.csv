@@ -1,0 +1,23 @@
+Create Supabase project and configure DB/Auth/Realtime|Create Supabase project, enable Auth, Realtime, and store connection info in GitHub secrets.|backend,sprint|Sprint 1: Core
+Create User table in Supabase schema|Add `users` table with fields: id, email, password_hash, username, profile_image_url, active_cohort_id, push_tokens.|backend,sprint|Sprint 1: Core
+Create Cohort table in Supabase schema|Add `cohorts` table with fields: id, nix_date_month, start_date, member_count, chat_room_id, status.|backend,sprint|Sprint 1: Core
+Create NixDate table in Supabase schema|Add `nix_dates` table to represent upcoming first-of-month cohorts.|backend,sprint|Sprint 1: Core
+Create DB indexes & constraints|Add necessary indexes and constraints for user email uniqueness and cohort size enforcement.|backend,sprint|Sprint 1: Core
+Implement signup endpoint using Supabase Auth|Backend: integrate Supabase Auth signup and store basic profile row in `users` table.|backend,sprint|Sprint 1: Core
+Implement profile image upload handling|Backend: accept image uploads, store in Supabase Storage, return URL for profile_image_url.|backend,sprint|Sprint 1: Core
+Implement GET /nix-dates API|List upcoming Nix Dates and available cohorts per date.|backend,sprint|Sprint 1: Core
+Implement GET /cohorts/:id API|Return cohort details and member count.|backend,sprint|Sprint 1: Core
+Implement POST /cohorts/:id/join API|Join a cohort: enforce one-active-cohort and 25-member cap; add user to cohort member list.|backend,sprint|Sprint 1: Core
+Implement GET /users/:id/active-cohort API|Return user's active cohort if any.|backend,sprint|Sprint 1: Core
+Build dashboard data endpoint|Return cohort timer, start date, status, and quick stats for active user.|backend,sprint|Sprint 1: Core
+Signup page (frontend)|Build signup UI and integrate with Supabase Auth signup endpoint.|frontend,sprint|Sprint 1: Core
+Profile image upload UI (frontend)|Add image picker and upload flow to signup/profile screens.|frontend,sprint|Sprint 1: Core
+NixIt enrollment page UI (frontend)|Show list of upcoming Nix Dates and join buttons; indicate full cohorts.|frontend,sprint|Sprint 1: Core
+Cohort join UX and error handling (frontend)|Handle success, already-in-cohort, and cohort-full errors gracefully.|frontend,sprint|Sprint 1: Core
+Cohort dashboard UI with timer (frontend)|Implement dashboard view showing active cohort, timer, member count, and links to chat/tap-out.|frontend,sprint|Sprint 1: Core
+Timer component and client-side calculation (frontend)|Implement durable timer component that syncs with server start_date.|frontend,sprint|Sprint 1: Core
+Responsive layout and mobile-first styles (frontend)|Ensure pages adapt to mobile widths and follow pastel style guidelines.|frontend,sprint|Sprint 1: Core
+Add local dev README with Supabase setup steps|Document how to run locally, configure Supabase env vars, and seed data.|docs,sprint|Sprint 1: Core
+Seed script to create sample cohorts/users|Add a script to populate development DB with sample cohorts and users.|backend,sprint|Sprint 1: Core
+QA: Unit tests for auth and join logic|Backend unit tests for signup, join restrictions, and cohort cap logic.|qa,sprint|Sprint 1: Core
+QA: Integration test for signup->join->dashboard flow|End-to-end test covering main happy path.|qa,sprint|Sprint 1: Core
