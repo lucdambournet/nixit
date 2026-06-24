@@ -51,14 +51,10 @@ const seed = async () => {
     .upsert(cohortRows, { onConflict: ["nix_date_id"] });
   if (cohortError) throw cohortError;
 
-<<<<<<< HEAD
-  console.log("Seed complete.");
-=======
   console.log('Seed complete.');
   console.log('\n⚠️  If the enrollment screen shows no dates, you need to apply RLS policies.');
   console.log('   Open: https://supabase.com/dashboard/project/vuylmwyiecanklvehxiz/sql/new');
   console.log('   Paste and run: supabase/rls_policies.sql');
->>>>>>> 9ae9a9951f9fb5e430cc157d06ad9fcfce305664
 };
 
 seed().catch((err) => {
