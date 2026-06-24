@@ -11,10 +11,7 @@
       "sourceMaps": true,
       "trace": true,
       "breakOnLoad": true,
-      "skipFiles": [
-        "**/node_modules/**",
-        "<node_internals>/**"
-      ]
+      "skipFiles": ["**/node_modules/**", "<node_internals>/**"]
     },
     {
       "type": "pwa-node",

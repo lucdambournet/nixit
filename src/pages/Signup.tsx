@@ -45,7 +45,7 @@ function Signup() {
     const { error: profileError } = await supabase.from('users').insert([{ id: user.id, email, username, profile_image_url: profileImageUrl }]);
     if (profileError) { setError(profileError.message); setLoading(false); return; }
 
-    navigate('/enrollment');
+    navigate("/enrollment");
   };
 
   return (

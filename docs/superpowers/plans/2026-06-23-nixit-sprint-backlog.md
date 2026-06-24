@@ -9,6 +9,7 @@ Supabase is the chosen backend platform for auth, database storage, and realtime
 ## Sprint 1: Core auth, cohort enrollment, and dashboard
 
 ### Goals
+
 - Enable account creation
 - Present available Nix Dates
 - Allow users to join a cohort
@@ -40,6 +41,7 @@ Supabase is the chosen backend platform for auth, database storage, and realtime
 ### Tasks
 
 #### Backend
+
 - set up Supabase project, configure database tables, auth, and realtime
 - create `User`, `Cohort`, and `NixDate` models
 - build auth/signup endpoint with profile creation
@@ -50,6 +52,7 @@ Supabase is the chosen backend platform for auth, database storage, and realtime
 - add validation for one active cohort per user and 25-member limit
 
 #### Frontend
+
 - build signup page and profile capture UI
 - build cohort enrollment page with list of future months
 - build join cohort flow and error handling
@@ -57,6 +60,7 @@ Supabase is the chosen backend platform for auth, database storage, and realtime
 - add responsive layout for mobile screens
 
 #### QA
+
 - test signup and profile creation
 - test cohort listing and join restrictions
 - test dashboard data and timer display
@@ -67,6 +71,7 @@ Supabase is the chosen backend platform for auth, database storage, and realtime
 ## Sprint 2: Cohort chatroom and help alert notifications
 
 ### Goals
+
 - Add cohort group chat
 - Add help alert flow
 - Deliver push notification support for help alerts
@@ -90,6 +95,7 @@ Supabase is the chosen backend platform for auth, database storage, and realtime
 ### Tasks
 
 #### Backend
+
 - add `ChatMessage` model and chat storage
 - build `GET /cohorts/:id/messages` and `POST /cohorts/:id/messages`
 - define message types: normal, help-alert, tap-out request
@@ -98,6 +104,7 @@ Supabase is the chosen backend platform for auth, database storage, and realtime
 - add in-app notification records or badge endpoint
 
 #### Frontend
+
 - build chatroom UI and message feed
 - support sending text messages
 - render help alert system messages distinctly
@@ -106,12 +113,14 @@ Supabase is the chosen backend platform for auth, database storage, and realtime
 - create push permission prompt and enable workflow
 
 #### Notifications
+
 - configure push service for web browser/mobile browsers
 - register device/browser push tokens
 - dispatch notifications for help alerts
 - ensure opt-in settings are respected
 
 #### QA
+
 - test chat send/receive
 - test help alert creation and chat appearance
 - test push notifications for help alerts
@@ -122,6 +131,7 @@ Supabase is the chosen backend platform for auth, database storage, and realtime
 ## Sprint 3: Tap-out approval workflow and notification settings
 
 ### Goals
+
 - Implement tap-out request, approval, and undo
 - Add notification preference controls
 - Support active-user approval rules
@@ -149,6 +159,7 @@ Supabase is the chosen backend platform for auth, database storage, and realtime
 ### Tasks
 
 #### Backend
+
 - add `TapOutRequest` model and approval state
 - add `ActiveUser` logic based on app usage in last 24 hours
 - build `POST /cohorts/:id/tap-out-requests`
@@ -159,6 +170,7 @@ Supabase is the chosen backend platform for auth, database storage, and realtime
 - add notification preference model/API
 
 #### Frontend
+
 - build multi-step tap-out UI on dashboard
 - add reason selection / free text entry
 - add confirmation modal and final submit
@@ -167,10 +179,12 @@ Supabase is the chosen backend platform for auth, database storage, and realtime
 - build notification settings screen
 
 #### Notifications
+
 - dispatch notifications for tap-out request creation and approval/rejection updates
 - ensure settings toggle prevents unwanted notifications
 
 #### QA
+
 - test tap-out request creation and chat posting
 - test approval flows and active-user threshold logic
 - test undo behavior and persistence for 3 days
@@ -181,6 +195,7 @@ Supabase is the chosen backend platform for auth, database storage, and realtime
 ## Sprint 4: UI polish, final testing, and launch prep
 
 ### Goals
+
 - Polish UI and responsiveness
 - Finish end-to-end validation
 - Prepare for launch-ready quality
@@ -203,17 +218,20 @@ Supabase is the chosen backend platform for auth, database storage, and realtime
 ### Tasks
 
 #### Frontend
+
 - refine responsive CSS and spacing
 - tune color usage and component styling
 - improve onboarding flow transitions
 - finalize dashboard and chat UX
 
 #### Backend
+
 - review validation and error handling across APIs
 - optimize database queries for cohort and chat data
 - audit push notification delivery logic
 
 #### QA / Testing
+
 - run end-to-end tests for signup, cohort join, chat, help alert, and tap-out
 - run cross-device checks for mobile and desktop
 - verify push notifications on supported browsers/devices
@@ -224,6 +242,7 @@ Supabase is the chosen backend platform for auth, database storage, and realtime
 ## Task format for execution
 
 Each sprint task should be tracked as:
+
 - Title
 - Description
 - Acceptance criteria
@@ -232,6 +251,7 @@ Each sprint task should be tracked as:
 - Owner
 
 Example:
+
 - Title: Build cohort join API
 - Description: Implement the backend endpoint to join a selected Nix Date cohort, enforce one active cohort per user, and cap cohorts at 25 members.
 - Acceptance criteria:

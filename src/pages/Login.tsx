@@ -7,8 +7,8 @@ import { Card } from '../components/ui/Card';
 
 function Login() {
   const navigate = useNavigate();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [resetting, setResetting] = useState(false);
@@ -21,7 +21,12 @@ function Login() {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) { setError(error.message); setLoading(false); return; }
     if (!data?.user) { setError('Login succeeded but no session was returned.'); setLoading(false); return; }
-    navigate('/enrollment');
+    const { data: userData } = await supabase
+      .from('users')
+      .select('active_cohort_id')
+      .eq('id', data.user.id)
+      .single();
+    navigate(userData?.active_cohort_id ? '/dashboard' : '/enrollment');
   };
 
   const handleReset = async () => {

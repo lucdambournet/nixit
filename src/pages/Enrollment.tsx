@@ -30,13 +30,21 @@ function Enrollment() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { navigate('/login'); return; }
 
+      const { data: userData } = await supabase
+        .from('users')
+        .select('active_cohort_id')
+        .eq('id', user.id)
+        .single();
+      if (userData?.active_cohort_id) { navigate('/dashboard'); return; }
+
       const { data, error } = await supabase
         .from('cohorts')
         .select('id, member_count, max_members, status, start_date, nix_date:nix_date_id(month, start_date)')
         .in('status', ['upcoming', 'active'])
         .order('start_date', { ascending: true });
 
-      if (error) { setError(error.message); setLoading(false); return; }
+      if (error) { console.error('cohorts query error:', error); setError(error.message); setLoading(false); return; }
+      console.log('cohorts fetched:', data?.length, data);
       setCohorts((data ?? []) as unknown as Cohort[]);
       setLoading(false);
     };
