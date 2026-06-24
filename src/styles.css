@@ -185,6 +185,17 @@ img, video { max-width: 100%; height: auto; }
   --color-info-surface:    var(--lavender-50);
   --color-info-border:     var(--lavender-200);
 
+  --color-warning:         var(--neutral-500);
+  --color-warning-surface: var(--neutral-100);
+  --color-warning-border:  var(--neutral-200);
+
+  --color-accent:          var(--lavender-400);
+  --color-accent-hover:    var(--lavender-500);
+  --color-accent-surface:  var(--lavender-100);
+
+  --color-purple:          var(--purple-600);
+  --color-purple-deep:     var(--purple-700);
+
   /* ── Blob Decoration Colors ── */
   --blob-lavender:      rgba(150, 126, 255, 0.18);
   --blob-lavender-soft: rgba(180, 160, 255, 0.11);
@@ -251,6 +262,16 @@ img, video { max-width: 100%; height: auto; }
     radial-gradient(ellipse 520px 620px at 90%  82%, var(--blob-purple),         transparent 68%),
     radial-gradient(ellipse 640px 420px at 74%   4%, var(--blob-lavender-soft),  transparent 68%),
     radial-gradient(ellipse 420px 520px at  4%  88%, var(--blob-purple-deep),    transparent 68%);
+}
+
+/* ── Dot Pattern Texture ── */
+.nixit-dot-bg {
+  background-image: radial-gradient(circle, var(--neutral-300) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+.nixit-dot-bg-fine {
+  background-image: radial-gradient(circle, var(--neutral-200) 1px, transparent 1px);
+  background-size: 12px 12px;
 }
 
 /* ── Scrollbar ── */

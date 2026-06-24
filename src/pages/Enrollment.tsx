@@ -72,14 +72,8 @@ function Enrollment() {
       <div style={{ maxWidth: 640, margin: '0 auto', padding: '40px 24px 64px' }}>
         {/* Header */}
         <div style={{ marginBottom: 32 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
-            <div style={{
-              width: 32, height: 32, borderRadius: 'var(--radius-lg)',
-              background: 'linear-gradient(135deg, var(--lavender-400), var(--purple-500))',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: 'white', fontSize: 16, fontFamily: 'var(--font-display)', fontWeight: 800,
-            }}>N</div>
-            <span style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 'var(--text-xl)', color: 'var(--lavender-600)', letterSpacing: 'var(--tracking-tight)' }}>NixIt</span>
+          <div style={{ marginBottom: 10 }}>
+            <img src="/assets/logo.svg" height={32} alt="NixIt" style={{ display: 'block' }} />
           </div>
           <h1 style={{
             fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 'var(--text-3xl)',

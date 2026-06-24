@@ -38,24 +38,8 @@ function Login() {
       <div style={{ width: '100%', maxWidth: 420 }}>
         {/* Logo */}
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <div style={{
-            display: 'inline-flex', alignItems: 'center', gap: 10,
-            fontFamily: 'var(--font-display)', fontWeight: 'var(--weight-extrabold)',
-            fontSize: 'var(--text-2xl)', color: 'var(--lavender-600)',
-            letterSpacing: 'var(--tracking-tight)',
-          }}>
-            <span style={{
-              width: 36, height: 36, borderRadius: 'var(--radius-lg)',
-              background: 'linear-gradient(135deg, var(--lavender-400), var(--purple-500))',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: 'white', fontSize: 18,
-            }}>N</span>
-            NixIt
-          </div>
-          <p style={{
-            fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)',
-            color: 'var(--color-text-muted)', marginTop: 8,
-          }}>
+          <img src="/assets/logo.svg" height={36} alt="NixIt" style={{ display: 'inline-block' }} />
+          <p style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)', marginTop: 8 }}>
             Quit together. Stay accountable.
           </p>
         </div>
