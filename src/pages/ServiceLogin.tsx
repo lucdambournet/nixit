@@ -52,7 +52,7 @@ function ServiceLogin() {
         {error && <p className="error-text">{error}</p>}
         <p className="muted">Then go to <button type="button" className="link-button" onClick={() => navigate('/login')}>Login</button>.</p>
       </div>
-    </div>
+    </main>
   );
 }
 
