@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
-import { supabase } from '../lib/supabase';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from "react";
+import { supabase } from "../lib/supabase";
+import { useNavigate } from "react-router-dom";
 
 export type NixDate = {
   id: string;
@@ -18,9 +18,9 @@ function Enrollment() {
   useEffect(() => {
     const loadNixDates = async () => {
       const { data, error } = await supabase
-        .from('nix_dates')
-        .select('id,month,start_date,cohorts(id,member_count,status)')
-        .order('start_date', { ascending: true });
+        .from("nix_dates")
+        .select("id,month,start_date,cohorts(id,member_count,status)")
+        .order("start_date", { ascending: true });
       if (error) {
         setError(error.message);
         setLoading(false);
@@ -34,12 +34,14 @@ function Enrollment() {
 
   const handleJoin = async (cohortId: string) => {
     setError(null);
-    const { error } = await supabase.rpc('join_cohort', { target_cohort_id: cohortId });
+    const { error } = await supabase.rpc("join_cohort", {
+      target_cohort_id: cohortId,
+    });
     if (error) {
       setError(error.message);
       return;
     }
-    navigate('/dashboard');
+    navigate("/dashboard");
   };
 
   return (
@@ -60,7 +62,9 @@ function Enrollment() {
                 <div key={item.id} className="list-item">
                   <div>
                     <strong>{item.month}</strong>
-                    <p>Starts {new Date(item.start_date).toLocaleDateString()}</p>
+                    <p>
+                      Starts {new Date(item.start_date).toLocaleDateString()}
+                    </p>
                     <p>{cohort.member_count} members</p>
                   </div>
                   <button type="button" onClick={() => handleJoin(cohort.id)}>

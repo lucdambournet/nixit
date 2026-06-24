@@ -1,12 +1,12 @@
-import { useState } from 'react';
-import { supabase } from '../lib/supabase';
-import { useNavigate } from 'react-router-dom';
+import { useState } from "react";
+import { supabase } from "../lib/supabase";
+import { useNavigate } from "react-router-dom";
 
 function Signup() {
   const navigate = useNavigate();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [username, setUsername] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -24,12 +24,12 @@ function Signup() {
 
     const user = data.user;
     if (!user) {
-      setError('Signup succeeded but no user was returned.');
+      setError("Signup succeeded but no user was returned.");
       setLoading(false);
       return;
     }
 
-    const { error: profileError } = await supabase.from('users').insert([
+    const { error: profileError } = await supabase.from("users").insert([
       {
         id: user.id,
         email,
@@ -43,7 +43,7 @@ function Signup() {
       return;
     }
 
-    navigate('/enrollment');
+    navigate("/enrollment");
   };
 
   return (
@@ -52,22 +52,45 @@ function Signup() {
       <form onSubmit={handleSubmit} className="card form-card">
         <label>
           Email
-          <input type="email" value={email} onChange={(event) => setEmail(event.target.value)} required />
+          <input
+            type="email"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            required
+          />
         </label>
         <label>
           Password
-          <input type="password" value={password} onChange={(event) => setPassword(event.target.value)} required />
+          <input
+            type="password"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            required
+          />
         </label>
         <label>
           Username
-          <input value={username} onChange={(event) => setUsername(event.target.value)} required />
+          <input
+            value={username}
+            onChange={(event) => setUsername(event.target.value)}
+            required
+          />
         </label>
         <button type="submit" disabled={loading}>
-          {loading ? 'Signing up...' : 'Sign up'}
+          {loading ? "Signing up..." : "Sign up"}
         </button>
         {error && <p className="error-text">{error}</p>}
       </form>
-      <p className="muted">Already have an account? <button type="button" className="link-button" onClick={() => navigate('/login')}>Sign in</button></p>
+      <p className="muted">
+        Already have an account?{" "}
+        <button
+          type="button"
+          className="link-button"
+          onClick={() => navigate("/login")}
+        >
+          Sign in
+        </button>
+      </p>
     </main>
   );
 }

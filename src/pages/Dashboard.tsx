@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from 'react';
-import { supabase } from '../lib/supabase';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useMemo, useState } from "react";
+import { supabase } from "../lib/supabase";
+import { useNavigate } from "react-router-dom";
 
 function formatTimer(startDate: string) {
   const now = new Date();
@@ -14,16 +14,23 @@ function formatTimer(startDate: string) {
 
 function Dashboard() {
   const navigate = useNavigate();
-  const [cohort, setCohort] = useState<{ month: string; start_date: string; member_count: number; status: string } | null>(null);
+  const [cohort, setCohort] = useState<{
+    month: string;
+    start_date: string;
+    member_count: number;
+    status: string;
+  } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [timer, setTimer] = useState('');
+  const [timer, setTimer] = useState("");
 
   useEffect(() => {
     const loadCohort = async () => {
       const { data, error } = await supabase
-        .from('users')
-        .select('active_cohort:active_cohort_id (start_date,member_count,status,nix_dates(month))')
+        .from("users")
+        .select(
+          "active_cohort:active_cohort_id (start_date,member_count,status,nix_dates(month))",
+        )
         .single();
       if (error) {
         setError(error.message);
@@ -31,12 +38,22 @@ function Dashboard() {
         return;
       }
       if (!data || !data.active_cohort) {
-        setError('No active cohort found.');
+        setError("No active cohort found.");
         setLoading(false);
         return;
       }
-      const raw = data.active_cohort as unknown as { start_date: string; member_count: number; status: string; nix_dates: { month: string } };
-      setCohort({ month: raw.nix_dates.month, start_date: raw.start_date, member_count: raw.member_count, status: raw.status });
+      const raw = data.active_cohort as unknown as {
+        start_date: string;
+        member_count: number;
+        status: string;
+        nix_dates: { month: string };
+      };
+      setCohort({
+        month: raw.nix_dates.month,
+        start_date: raw.start_date,
+        member_count: raw.member_count,
+        status: raw.status,
+      });
       setLoading(false);
     };
     loadCohort();
@@ -64,7 +81,7 @@ function Dashboard() {
         <p>Timer: {timer}</p>
         <p>Members: {cohort.member_count}</p>
         <div className="dashboard-actions">
-          <button type="button" onClick={() => navigate('/enrollment')}>
+          <button type="button" onClick={() => navigate("/enrollment")}>
             Change cohort
           </button>
         </div>

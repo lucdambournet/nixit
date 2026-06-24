@@ -1,11 +1,11 @@
-import { useState } from 'react';
-import { supabase } from '../lib/supabase';
-import { useNavigate } from 'react-router-dom';
+import { useState } from "react";
+import { supabase } from "../lib/supabase";
+import { useNavigate } from "react-router-dom";
 
 function Login() {
   const navigate = useNavigate();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [resetting, setResetting] = useState(false);
@@ -16,7 +16,10 @@ function Login() {
     setError(null);
     setLoading(true);
 
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
     if (error) {
       setError(error.message);
       setLoading(false);
@@ -24,26 +27,28 @@ function Login() {
     }
 
     if (!data || !data.user) {
-      setError('Login succeeded but no user session was returned.');
+      setError("Login succeeded but no user session was returned.");
       setLoading(false);
       return;
     }
 
-    navigate('/enrollment');
+    navigate("/enrollment");
   };
 
   const handleReset = async () => {
     setResetMessage(null);
     if (!email) {
-      setResetMessage('Enter your email above to receive a reset link.');
+      setResetMessage("Enter your email above to receive a reset link.");
       return;
     }
     setResetting(true);
-    const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + '/login' });
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.origin + "/login",
+    });
     if (error) {
       setResetMessage(error.message);
     } else {
-      setResetMessage('Password reset email sent. Check your inbox.');
+      setResetMessage("Password reset email sent. Check your inbox.");
     }
     setResetting(false);
   };
@@ -54,16 +59,37 @@ function Login() {
       <form onSubmit={handleSubmit} className="card form-card">
         <label>
           Email
-          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
         </label>
         <label>
           Password
-          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
         </label>
-        <button type="submit" disabled={loading}>{loading ? 'Signing in...' : 'Sign in'}</button>
+        <button type="submit" disabled={loading}>
+          {loading ? "Signing in..." : "Sign in"}
+        </button>
         {error && <p className="error-text">{error}</p>}
         {resetMessage && <p className="muted">{resetMessage}</p>}
-        <p className="muted"><button type="button" className="link-button" onClick={handleReset} disabled={resetting}>{resetting ? 'Sending...' : 'Forgot password?'}</button></p>
+        <p className="muted">
+          <button
+            type="button"
+            className="link-button"
+            onClick={handleReset}
+            disabled={resetting}
+          >
+            {resetting ? "Sending..." : "Forgot password?"}
+          </button>
+        </p>
       </form>
     </main>
   );

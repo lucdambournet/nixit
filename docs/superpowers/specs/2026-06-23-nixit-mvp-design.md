@@ -9,6 +9,7 @@ NixIt is a mobile-friendly web app for high schoolers to quit nicotine together 
 ## Goal
 
 Deliver a first release that lets users:
+
 - sign up and create a profile,
 - browse and join a future monthly "Nix Date" cohort,
 - see their active cohort timeline,
@@ -51,6 +52,7 @@ User views upcoming Nix Dates, selects any future month, and joins that cohort. 
 ### 3. Cohort dashboard
 
 Once joined, the user lands on their cohort dashboard. It displays:
+
 - the active Nix Date month and start date,
 - a countdown/timer since the cohort start,
 - cohort size and status,
@@ -64,12 +66,14 @@ Users can send group messages within their active cohort chatroom. Chat messages
 ### 5. Need help alert
 
 When a user taps the help button, the app:
+
 - posts a help-alert message in the cohort chat,
 - sends immediate push notifications to cohort members who opt in.
 
 ### 6. Tap out and rejoin
 
 The tap-out button is available on the cohort dashboard. When pressed, the user enters a multi-step tap-out flow:
+
 - select or enter a reason for leaving the cohort,
 - review and confirm the tap-out decision,
 - the app posts an automatic tap-out request message to the cohort chat.
@@ -146,6 +150,7 @@ Once the tap-out request receives the required approvals, a follow-up system mes
 Push notifications are a must-have for the MVP.
 
 Send push notifications for:
+
 - new help-alerts from cohort members,
 - new cohort chat messages when the recipient is not currently active in the chat,
 - cohort join confirmation,

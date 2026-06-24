@@ -42,6 +42,7 @@ gh secret set SUPABASE_SERVICE_ROLE_KEY --body "your-service-role-key"
 Project automation
 
 The repo includes `.github/workflows/project-automation.yml` which will automatically:
+
 - add newly opened issues to the "To do" column on the `NixIt Board` project
 - move issues to "In progress" when labeled `in-progress`
 - move issues to "Done" when closed

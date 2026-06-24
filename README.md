@@ -5,11 +5,13 @@ Vite + React app scaffold for the NixIt cohort-based nicotine cessation experien
 ## Local setup
 
 1. Install dependencies:
+
    ```bash
    npm install
    ```
 
 2. Copy environment variables:
+
    ```bash
    cp .env.example .env
    ```
@@ -22,6 +24,7 @@ Vite + React app scaffold for the NixIt cohort-based nicotine cessation experien
 4. Create your Supabase schema using `supabase/schema.sql`.
 
 5. Seed sample data:
+
    ```bash
    npm run seed
    ```
@@ -34,6 +37,7 @@ Vite + React app scaffold for the NixIt cohort-based nicotine cessation experien
 ## Supabase schema
 
 The initial schema includes:
+
 - `users`
 - `nix_dates`
 - `cohorts`

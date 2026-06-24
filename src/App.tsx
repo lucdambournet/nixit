@@ -1,9 +1,9 @@
-import { Route, Routes, Navigate } from 'react-router-dom';
-import Signup from './pages/Signup';
-import Login from './pages/Login';
-import ServiceLogin from './pages/ServiceLogin';
-import Enrollment from './pages/Enrollment';
-import Dashboard from './pages/Dashboard';
+import { Route, Routes, Navigate } from "react-router-dom";
+import Signup from "./pages/Signup";
+import Login from "./pages/Login";
+import ServiceLogin from "./pages/ServiceLogin";
+import Enrollment from "./pages/Enrollment";
+import Dashboard from "./pages/Dashboard";
 
 function App() {
   return (
