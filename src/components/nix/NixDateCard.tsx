@@ -10,6 +10,9 @@ interface NixDateCardProps {
   status?: CohortStatus;
   isJoined?: boolean;
   onJoin?: () => void;
+  description?: string;
+  features?: string[];
+  members?: string[];
   style?: React.CSSProperties;
 }
 
@@ -25,7 +28,25 @@ const STATUS_MAP: Record<CohortStatus, {
   past:     { grad: 'linear-gradient(135deg,var(--neutral-50) 0%,var(--neutral-100) 100%)',    accent: 'var(--neutral-500)', light: 'var(--neutral-50)',   border: 'var(--neutral-200)', label: 'Past',       canJoin: false },
 };
 
-export function NixDateCard({ month, year, joined = 0, total = 25, status = 'upcoming', isJoined = false, onJoin, style }: NixDateCardProps) {
+const BG_COLORS = ['var(--lavender-400)','var(--purple-400)','var(--lavender-300)','var(--purple-500)','var(--lavender-500)'];
+
+function MemberDot({ name, index }: { name: string; index: number }) {
+  return (
+    <div style={{
+      width: 26, height: 26, borderRadius: '50%',
+      background: BG_COLORS[name.charCodeAt(0) % BG_COLORS.length],
+      color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center',
+      fontSize: 10, fontFamily: 'var(--font-body)', fontWeight: 600,
+      border: '2px solid white', flexShrink: 0,
+      marginLeft: index > 0 ? -8 : 0,
+      position: 'relative', zIndex: 10 - index,
+    }}>
+      {name[0].toUpperCase()}
+    </div>
+  );
+}
+
+export function NixDateCard({ month, year, joined = 0, total = 25, status = 'upcoming', isJoined = false, onJoin, description, features, members, style }: NixDateCardProps) {
   const monthName = MONTHS[month - 1] ?? '';
   const abbr      = monthName.slice(0, 3).toUpperCase();
   const startDate = new Date(year, month - 1, 1);
@@ -58,6 +79,23 @@ export function NixDateCard({ month, year, joined = 0, total = 25, status = 'upc
 
       {/* Body */}
       <div style={{ padding: '18px 22px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+        {description && (
+          <p style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)', lineHeight: 'var(--leading-relaxed)', margin: 0 }}>
+            {description}
+          </p>
+        )}
+
+        {features && features.length > 0 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+            {features.map((f, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+                <span style={{ width: 4, height: 4, borderRadius: '50%', background: sc.accent, flexShrink: 0, opacity: 0.6 }} />
+                <span style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)', color: 'var(--color-text)' }}>{f}</span>
+              </div>
+            ))}
+          </div>
+        )}
+
         {/* Progress */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -73,6 +111,18 @@ export function NixDateCard({ month, year, joined = 0, total = 25, status = 'upc
             </span>
           )}
         </div>
+
+        {/* Member stack */}
+        {members && members.length > 0 && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ display: 'flex' }}>
+              {members.slice(0, 5).map((m, i) => <MemberDot key={m} name={m} index={i} />)}
+            </div>
+            <span style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)' }}>
+              {joined} member{joined !== 1 ? 's' : ''} joined
+            </span>
+          </div>
+        )}
 
         {/* CTA */}
         {isJoined ? (
@@ -97,7 +147,7 @@ export function NixDateCard({ month, year, joined = 0, total = 25, status = 'upc
         ) : (
           <div style={{ padding: '11px 18px', background: sc.light, borderRadius: 'var(--radius-md)', border: `1px solid ${sc.border}`, textAlign: 'center' }}>
             <span style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)', color: sc.accent, fontWeight: 'var(--weight-medium)' }}>
-              {status === 'full' ? 'Cohort full' : 'This cohort has closed'}
+              {status === 'full' ? 'Cohort full — join the waitlist for the next date' : 'This cohort has closed'}
             </span>
           </div>
         )}

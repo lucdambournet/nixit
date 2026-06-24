@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 function ServiceLogin() {
   const navigate = useNavigate();
@@ -44,28 +44,15 @@ function ServiceLogin() {
     <main className="page-shell">
       <h1>Temporary Service Login</h1>
       <div className="card form-card">
-        <p>
-          This temporary route uses the Supabase service role to ensure the test
-          account exists.
-        </p>
+        <p>This temporary route uses the Supabase service role to ensure the test account exists.</p>
         <button type="button" onClick={handleServiceLogin} disabled={loading}>
-          {loading ? "Processing..." : "Create / Sign in test account"}
+          {loading ? 'Processing...' : 'Create / Sign in test account'}
         </button>
         {message && <p className="muted">{message}</p>}
         {error && <p className="error-text">{error}</p>}
-        <p className="muted">
-          Then go to{" "}
-          <button
-            type="button"
-            className="link-button"
-            onClick={() => navigate("/login")}
-          >
-            Login
-          </button>
-          .
-        </p>
+        <p className="muted">Then go to <button type="button" className="link-button" onClick={() => navigate('/login')}>Login</button>.</p>
       </div>
-    </main>
+    </div>
   );
 }
 

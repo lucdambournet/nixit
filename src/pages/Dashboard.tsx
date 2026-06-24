@@ -348,26 +348,9 @@ function Dashboard() {
     { id: 'dates', label: 'Nix Dates', icon: <CalIcon /> },
   ];
 
-  const LogoMark = () => (
-    <div style={{
-      width: collapsed ? 28 : 28, height: 28, borderRadius: 'var(--radius-md)',
-      background: 'linear-gradient(135deg, var(--lavender-400), var(--purple-500))',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      color: 'white', fontSize: 15, fontFamily: 'var(--font-display)', fontWeight: 800,
-      flexShrink: 0,
-    }}>N</div>
-  );
-
-  const Logo = () => (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-      <LogoMark />
-      {!collapsed && (
-        <span style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 'var(--text-lg)', color: 'var(--lavender-600)', letterSpacing: 'var(--tracking-tight)' }}>
-          NixIt
-        </span>
-      )}
-    </div>
-  );
+  const Logo = () => collapsed
+    ? <img src="/assets/logo-mark.svg" height={28} alt="NixIt" style={{ display: 'block' }} />
+    : <img src="/assets/logo.svg" height={24} alt="NixIt" style={{ display: 'block' }} />;
 
   if (loading) {
     return (
