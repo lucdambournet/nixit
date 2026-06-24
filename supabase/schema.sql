@@ -34,9 +34,23 @@ create table if not exists cohort_members (
   primary key (user_id, cohort_id)
 );
 
-create or replace function join_cohort(requesting_user_id uuid, target_cohort_id uuid)
+-- Indexes
+create index if not exists idx_users_active_cohort on users(active_cohort_id);
+create index if not exists idx_cohorts_status on cohorts(status);
+create index if not exists idx_cohorts_start_date on cohorts(start_date);
+create index if not exists idx_cohort_members_cohort on cohort_members(cohort_id);
+create index if not exists idx_cohort_members_user on cohort_members(user_id);
+
+-- join_cohort uses auth.uid() so the caller cannot impersonate another user
+create or replace function join_cohort(target_cohort_id uuid)
   returns void language plpgsql security definer as $$
+declare
+  requesting_user_id uuid := auth.uid();
 begin
+  if requesting_user_id is null then
+    raise exception 'Not authenticated';
+  end if;
+
   if exists(select 1 from users where id = requesting_user_id and active_cohort_id is not null) then
     raise exception 'User already has an active cohort';
   end if;

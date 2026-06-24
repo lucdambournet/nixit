@@ -19,9 +19,14 @@ const supabase = createClient(supabaseUrl, supabaseServiceRoleKey, {
 
 const seed = async () => {
   const nft = [
-    { month: "July 2026", start_date: "2026-07-01" },
-    { month: "August 2026", start_date: "2026-08-01" },
-    { month: "September 2026", start_date: "2026-09-01" },
+    { month: 'June 2026',     start_date: '2026-06-01' },
+    { month: 'July 2026',     start_date: '2026-07-01' },
+    { month: 'August 2026',   start_date: '2026-08-01' },
+    { month: 'September 2026',start_date: '2026-09-01' },
+    { month: 'October 2026',  start_date: '2026-10-01' },
+    { month: 'November 2026', start_date: '2026-11-01' },
+    { month: 'December 2026', start_date: '2026-12-01' },
+    { month: 'January 2027',  start_date: '2027-01-01' },
   ];
 
   console.log("Seeding Nix Dates...");
@@ -46,7 +51,14 @@ const seed = async () => {
     .upsert(cohortRows, { onConflict: ["nix_date_id"] });
   if (cohortError) throw cohortError;
 
+<<<<<<< HEAD
   console.log("Seed complete.");
+=======
+  console.log('Seed complete.');
+  console.log('\n⚠️  If the enrollment screen shows no dates, you need to apply RLS policies.');
+  console.log('   Open: https://supabase.com/dashboard/project/vuylmwyiecanklvehxiz/sql/new');
+  console.log('   Paste and run: supabase/rls_policies.sql');
+>>>>>>> 9ae9a9951f9fb5e430cc157d06ad9fcfce305664
 };
 
 seed().catch((err) => {
