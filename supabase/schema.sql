@@ -51,6 +51,10 @@ begin
     raise exception 'Not authenticated';
   end if;
 
+  if not exists(select 1 from users where id = requesting_user_id) then
+    raise exception 'User profile not found. Please complete signup first.';
+  end if;
+
   if exists(select 1 from users where id = requesting_user_id and active_cohort_id is not null) then
     raise exception 'User already has an active cohort';
   end if;
