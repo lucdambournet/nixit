@@ -11,6 +11,7 @@ import { Card } from '../components/ui/Card';
 import { Input } from '../components/ui/Input';
 import { Toast } from '../components/ui/Toast';
 import { Logo } from '../components/ui/Logo';
+import { ProfileScreen } from '../components/profile/ProfileScreen';
 
 /* ── Inline SVG Icons ── */
 const S = { strokeWidth: '2', strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const };
@@ -34,11 +35,16 @@ const SendIcon = ({ n = 15 }) => (
     <line x1="22" y1="2" x2="11" y2="13" /><polygon points="22 2 15 22 11 13 2 9 22 2" fill="currentColor" stroke="none" />
   </svg>
 );
+const UserIcon = ({ n = 18 }) => (
+  <svg width={n} height={n} viewBox="0 0 24 24" fill="none" stroke="currentColor" {...S}>
+    <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" /><circle cx="12" cy="7" r="4" />
+  </svg>
+);
 
 /* ── Types ── */
-type Page = 'home' | 'chat' | 'dates';
+type Page = 'home' | 'chat' | 'dates' | 'profile';
 type CohortData = { id: string; start_date: string; member_count: number; max_members: number; status: string; nix_date: { month: string; start_date: string } };
-type UserData = { username: string; profile_image_url: string | null; active_cohort: CohortData | null };
+type UserData = { username: string; email: string; created_at: string; profile_image_url: string | null; active_cohort: CohortData | null };
 type Member = { user: { username: string; profile_image_url: string | null } };
 type UpcomingCohort = { id: string; member_count: number; max_members: number; status: string; start_date: string; nix_date: { month: string; start_date: string } };
 type Message = { id: number; from: string; text: string; time: string; isMe: boolean };
@@ -321,7 +327,7 @@ function Dashboard() {
 
       const { data, error } = await supabase
         .from('users')
-        .select('username, profile_image_url, active_cohort:active_cohort_id(id, start_date, member_count, max_members, status, nix_date:nix_date_id(month, start_date))')
+        .select('username, email, created_at, profile_image_url, active_cohort:active_cohort_id(id, start_date, member_count, max_members, status, nix_date:nix_date_id(month, start_date))')
         .eq('id', user.id)
         .single();
 
@@ -344,9 +350,10 @@ function Dashboard() {
   }, [navigate]);
 
   const NAV = [
-    { id: 'home',  label: 'Home',      icon: <HomeIcon /> },
-    { id: 'chat',  label: 'Chat',      icon: <ChatIcon /> },
-    { id: 'dates', label: 'Nix Dates', icon: <CalIcon /> },
+    { id: 'home',    label: 'Home',      icon: <HomeIcon /> },
+    { id: 'chat',    label: 'Chat',      icon: <ChatIcon /> },
+    { id: 'dates',   label: 'Nix Dates', icon: <CalIcon /> },
+    { id: 'profile', label: 'Profile',   icon: <UserIcon /> },
   ];
 
   const SidebarLogo = () => collapsed
@@ -401,6 +408,8 @@ function Dashboard() {
           logo={<SidebarLogo />}
           userAvatar={<Avatar src={userData.profile_image_url} name={userData.username} size="sm" status="online" />}
           userName={userData.username}
+          onUserClick={() => setPage('profile')}
+          userActive={page === 'profile'}
           onSignOut={() => supabase.auth.signOut().then(() => navigate('/login'))}
           style={{ height: '100vh' }}
         />
@@ -416,6 +425,19 @@ function Dashboard() {
         )}
         {page === 'dates' && (
           <DatesScreen activeCohortStart={startDate} />
+        )}
+        {page === 'profile' && (
+          <ProfileScreen
+            user={{
+              username: userData.username,
+              email: userData.email,
+              profile_image_url: userData.profile_image_url,
+              created_at: userData.created_at,
+              cohortLabel: cohort.nix_date?.month ?? null,
+            }}
+            onUserUpdate={patch => setUserData(u => (u ? { ...u, ...patch } : u))}
+            onSignOut={() => supabase.auth.signOut().then(() => navigate('/login'))}
+          />
         )}
       </main>
     </div>
