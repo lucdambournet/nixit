@@ -106,9 +106,19 @@ function Enrollment() {
         </div>
 
         {error && (
-          <p style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)', color: 'var(--purple-600)', marginBottom: 16 }}>
-            {error}
-          </p>
+          <div style={{
+            fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)',
+            color: '#c0392b',
+            background: 'rgba(220, 53, 69, 0.08)',
+            border: '1px solid rgba(220, 53, 69, 0.35)',
+            borderRadius: 'var(--radius-md)',
+            padding: '10px 16px',
+            marginBottom: 16,
+            lineHeight: 'var(--leading-relaxed)',
+            fontWeight: 500,
+          }}>
+            ⚠ {error}
+          </div>
         )}
 
         {loading ? (

@@ -93,7 +93,7 @@ function HomeScreen({ user, cohort, members, onGoToChat }: { user: UserData; coh
             <Badge variant="lavender" size="sm">{cohort.member_count} members</Badge>
           </div>
           <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-            {members.map((m, i) => (
+            {members.filter(m => m.user).map((m, i) => (
               <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
                 <Avatar src={m.user.profile_image_url} name={m.user.username} size="md" status="online" />
                 <span style={{ fontFamily: 'var(--font-body)', fontSize: 10, color: 'var(--color-text-muted)' }}>{m.user.username}</span>
@@ -400,6 +400,7 @@ function Dashboard() {
           logo={<Logo />}
           userAvatar={<Avatar src={userData.profile_image_url} name={userData.username} size="sm" status="online" />}
           userName={userData.username}
+          onSignOut={() => supabase.auth.signOut().then(() => navigate('/login'))}
           style={{ height: '100vh' }}
         />
       </div>

@@ -16,10 +16,11 @@ interface SideNavProps {
   logo?: React.ReactNode;
   userAvatar?: React.ReactNode;
   userName?: string;
+  onSignOut?: () => void;
   style?: React.CSSProperties;
 }
 
-export function SideNav({ items, activeId, onNavigate, collapsed = false, onToggle, logo, userAvatar, userName, style }: SideNavProps) {
+export function SideNav({ items, activeId, onNavigate, collapsed = false, onToggle, logo, userAvatar, userName, onSignOut, style }: SideNavProps) {
   return (
     <nav style={{
       display: 'flex', flexDirection: 'column',
@@ -111,9 +112,25 @@ export function SideNav({ items, activeId, onNavigate, collapsed = false, onTogg
               fontFamily: 'var(--font-body)', fontWeight: 'var(--weight-medium)',
               fontSize: 'var(--text-sm)', color: 'var(--color-text)',
               overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+              flex: 1,
             }}>
               {userName}
             </span>
+          )}
+          {!collapsed && onSignOut && (
+            <button onClick={onSignOut} title="Sign out" style={{
+              background: 'none', border: 'none', cursor: 'pointer', flexShrink: 0,
+              color: 'var(--color-text-muted)', padding: '4px', borderRadius: 'var(--radius-sm)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              transition: 'color var(--transition-fast)',
+            }}
+              onMouseEnter={e => (e.currentTarget.style.color = 'var(--color-text)')}
+              onMouseLeave={e => (e.currentTarget.style.color = 'var(--color-text-muted)')}
+            >
+              <svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" />
+              </svg>
+            </button>
           )}
         </div>
       )}
