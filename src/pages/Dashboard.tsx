@@ -50,9 +50,17 @@ type UpcomingCohort = { id: string; member_count: number; max_members: number; s
 type Message = { id: number; from: string; text: string; time: string; isMe: boolean };
 
 /* ── Home Screen ── */
-function HomeScreen({ user, cohort, members, onGoToChat }: { user: UserData; cohort: CohortData; members: Member[]; onGoToChat: () => void }) {
+function HomeScreen({ user, cohort, members, onGoToChat, onTapOut }: { user: UserData; cohort: CohortData; members: Member[]; onGoToChat: () => void; onTapOut: () => void }) {
   const startDate = cohort.nix_date?.start_date ?? cohort.start_date;
-  const days = Math.floor((Date.now() - new Date(startDate).getTime()) / 86400000);
+  const now = Date.now();
+  const start = new Date(startDate).getTime();
+  const days = Math.floor((now - start) / 86400000);
+  const hasStarted = now >= start;
+  // Can tap out: before cohort starts (change of mind) OR after first full day
+  const canTapOut = !hasStarted || days >= 1;
+  const tapOutHint = hasStarted && days < 1
+    ? 'Available after your first full day.'
+    : 'Tapping out removes you from the cohort.';
   const today = new Date();
   const dayName = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][today.getDay()];
   const dateStr = today.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
@@ -123,9 +131,11 @@ function HomeScreen({ user, cohort, members, onGoToChat }: { user: UserData; coh
 
       {/* Tap Out */}
       <div style={{ textAlign: 'center' }}>
-        <Button variant="danger" size="sm">Tap Out</Button>
+        <Button variant="danger" size="sm" disabled={!canTapOut} onClick={onTapOut}>
+          {hasStarted ? 'Tap Out' : 'Change / Leave Cohort'}
+        </Button>
         <p style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)', margin: '6px 0 0' }}>
-          Tapping out removes you from the cohort. Available after your first full day.
+          {tapOutHint}
         </p>
       </div>
     </div>
@@ -418,7 +428,18 @@ function Dashboard() {
       {/* Main content */}
       <main style={{ flex: 1, overflowY: page === 'chat' ? 'hidden' : 'auto', position: 'relative', zIndex: 1 }}>
         {page === 'home' && (
-          <HomeScreen user={userData} cohort={cohort} members={members} onGoToChat={() => setPage('chat')} />
+          <HomeScreen
+            user={userData}
+            cohort={cohort}
+            members={members}
+            onGoToChat={() => setPage('chat')}
+            onTapOut={async () => {
+              if (!confirm('Are you sure you want to tap out? This removes you from the cohort.')) return;
+              const { error } = await supabase.rpc('leave_cohort');
+              if (error) { alert(error.message); return; }
+              navigate('/enrollment');
+            }}
+          />
         )}
         {page === 'chat' && (
           <ChatScreen user={userData} cohort={cohort} members={members} />

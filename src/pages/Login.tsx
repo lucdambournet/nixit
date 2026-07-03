@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { supabase } from '../lib/supabase';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Card } from '../components/ui/Card';
@@ -8,6 +8,8 @@ import { Logo } from '../components/ui/Logo';
 
 function Login() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const notice = (location.state as { notice?: string } | null)?.notice ?? null;
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -49,6 +51,22 @@ function Login() {
             Quit together. Stay accountable.
           </p>
         </div>
+
+        {notice && (
+          <div style={{
+            fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)',
+            color: '#1a6b3a',
+            background: 'rgba(25, 135, 84, 0.08)',
+            border: '1px solid rgba(25, 135, 84, 0.3)',
+            borderRadius: 'var(--radius-md)',
+            padding: '10px 16px',
+            marginBottom: 16,
+            lineHeight: 'var(--leading-relaxed)',
+            fontWeight: 500,
+          }}>
+            {notice}
+          </div>
+        )}
 
         <Card variant="glass" padding="lg">
           <h1 style={{

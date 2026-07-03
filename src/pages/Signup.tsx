@@ -34,8 +34,11 @@ function Signup() {
     const user = data.user;
     if (!user) { setError('Signup succeeded but no user was returned.'); setLoading(false); return; }
 
+    const hasSession = !!data.session;
+
+    // Avatar upload requires an active session — skip if email confirmation is pending
     let profileImageUrl: string | null = null;
-    if (avatarFile) {
+    if (avatarFile && hasSession) {
       const ext = avatarFile.name.split('.').pop();
       const { error: uploadError } = await supabase.storage
         .from('avatars').upload(`${user.id}.${ext}`, avatarFile, { upsert: true });
@@ -43,10 +46,18 @@ function Signup() {
       profileImageUrl = supabase.storage.from('avatars').getPublicUrl(`${user.id}.${ext}`).data.publicUrl;
     }
 
-    const { error: profileError } = await supabase.from('users').insert([{ id: user.id, email, username, profile_image_url: profileImageUrl }]);
-    if (profileError) { setError(profileError.message); setLoading(false); return; }
-
-    navigate("/enrollment");
+    if (hasSession) {
+      // Session active: insert profile and go to enrollment
+      const { error: profileError } = await supabase.from('users').insert([{ id: user.id, email, username, profile_image_url: profileImageUrl }]);
+      if (profileError) { setError(profileError.message); setLoading(false); return; }
+      navigate('/enrollment');
+    } else {
+      // No session: email confirmation required — the trigger will create the profile row
+      // User must confirm email then log in; avatar can be set later
+      setLoading(false);
+      setError(null);
+      navigate('/login', { state: { notice: 'Check your email to confirm your account, then sign in.' } });
+    }
   };
 
   return (
@@ -118,9 +129,18 @@ function Signup() {
             />
 
             {error && (
-              <p style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)', color: 'var(--purple-600)', margin: 0 }}>
-                {error}
-              </p>
+              <div style={{
+                fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)',
+                color: '#c0392b',
+                background: 'rgba(220, 53, 69, 0.08)',
+                border: '1px solid rgba(220, 53, 69, 0.35)',
+                borderRadius: 'var(--radius-md)',
+                padding: '10px 16px',
+                lineHeight: 'var(--leading-relaxed)',
+                fontWeight: 500,
+              }}>
+                ⚠ {error}
+              </div>
             )}
 
             <Button type="submit" variant="primary" size="lg" disabled={loading} style={{ width: '100%', marginTop: 4 }}>
