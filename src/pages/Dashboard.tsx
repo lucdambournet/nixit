@@ -10,6 +10,7 @@ import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { Input } from '../components/ui/Input';
 import { Toast } from '../components/ui/Toast';
+import { Logo } from '../components/ui/Logo';
 
 /* ── Inline SVG Icons ── */
 const S = { strokeWidth: '2', strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const };
@@ -358,9 +359,9 @@ function Dashboard() {
     { id: 'dates', label: 'Nix Dates', icon: <CalIcon /> },
   ];
 
-  const Logo = () => collapsed
-    ? <img src="/assets/logo-mark.svg" height={28} alt="NixIt" style={{ display: 'block' }} />
-    : <img src="/assets/logo.svg" height={24} alt="NixIt" style={{ display: 'block' }} />;
+  const SidebarLogo = () => collapsed
+    ? <Logo variant="mark" height={26} />
+    : <Logo height={22} />;
 
   if (loading) {
     return (
@@ -407,7 +408,7 @@ function Dashboard() {
           onNavigate={id => setPage(id as Page)}
           collapsed={collapsed}
           onToggle={() => setCollapsed(c => !c)}
-          logo={<Logo />}
+          logo={<SidebarLogo />}
           userAvatar={<Avatar src={userData.profile_image_url} name={userData.username} size="sm" status="online" />}
           userName={userData.username}
           onSignOut={() => supabase.auth.signOut().then(() => navigate('/login'))}

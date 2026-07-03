@@ -4,6 +4,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Card } from '../components/ui/Card';
+import { Logo } from '../components/ui/Logo';
 
 function Login() {
   const navigate = useNavigate();
@@ -45,7 +46,7 @@ function Login() {
       <div style={{ width: '100%', maxWidth: 420 }}>
         {/* Logo */}
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <img src="/assets/logo.svg" height={36} alt="NixIt" style={{ display: 'inline-block' }} />
+          <Logo height={44} style={{ margin: '0 auto' }} />
           <p style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)', marginTop: 8 }}>
             Quit together. Stay accountable.
           </p>

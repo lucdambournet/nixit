@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { NixDateCard } from '../components/nix/NixDateCard';
 import { Toast } from '../components/ui/Toast';
 import { Button } from '../components/ui/Button';
+import { Logo } from '../components/ui/Logo';
 
 type Cohort = {
   id: string;
@@ -81,7 +82,7 @@ function Enrollment() {
         {/* Header */}
         <div style={{ marginBottom: 32 }}>
           <div style={{ marginBottom: 10 }}>
-            <img src="/assets/logo.svg" height={32} alt="NixIt" style={{ display: 'block' }} />
+            <Logo height={30} />
           </div>
           <h1 style={{
             fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 'var(--text-3xl)',
@@ -108,9 +109,9 @@ function Enrollment() {
         {error && (
           <div style={{
             fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)',
-            color: '#c0392b',
-            background: 'rgba(220, 53, 69, 0.08)',
-            border: '1px solid rgba(220, 53, 69, 0.35)',
+            color: 'var(--color-danger)',
+            background: 'var(--color-danger-surface)',
+            border: '1px solid var(--color-danger-border)',
             borderRadius: 'var(--radius-md)',
             padding: '10px 16px',
             marginBottom: 16,
