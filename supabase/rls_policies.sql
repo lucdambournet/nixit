@@ -76,3 +76,24 @@ create policy "users can read own row"
       where cohort_id in (select get_my_cohort_ids())
     )
   );
+
+-- ── chat_messages: cohort members can read/send within their cohort ──
+alter table public.chat_messages enable row level security;
+
+drop policy if exists "cohort members can read their cohort's messages" on public.chat_messages;
+create policy "cohort members can read their cohort's messages"
+  on public.chat_messages for select
+  to authenticated
+  using (cohort_id in (select get_my_cohort_ids()));
+
+drop policy if exists "cohort members can send messages as themselves" on public.chat_messages;
+create policy "cohort members can send messages as themselves"
+  on public.chat_messages for insert
+  to authenticated
+  with check (
+    author_id = (select auth.uid())
+    and cohort_id in (select get_my_cohort_ids())
+  );
+
+-- Enable Realtime broadcast for chat_messages inserts
+alter publication supabase_realtime add table public.chat_messages;

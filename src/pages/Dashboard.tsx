@@ -10,6 +10,7 @@ import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { Input } from '../components/ui/Input';
 import { Toast } from '../components/ui/Toast';
+import { mapMessageRow, shouldShowAuthorName, type ChatMessageRow, type DisplayMessage } from '../lib/chatMessages';
 
 /* ── Inline SVG Icons ── */
 const S = { strokeWidth: '2', strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const };
@@ -37,10 +38,9 @@ const SendIcon = ({ n = 15 }) => (
 /* ── Types ── */
 type Page = 'home' | 'chat' | 'dates';
 type CohortData = { id: string; start_date: string; member_count: number; max_members: number; status: string; nix_date: { month: string; start_date: string } };
-type UserData = { username: string; profile_image_url: string | null; active_cohort: CohortData | null };
-type Member = { user: { username: string; profile_image_url: string | null } };
+type UserData = { id: string; username: string; profile_image_url: string | null; active_cohort: CohortData | null };
+type Member = { user: { id: string; username: string; profile_image_url: string | null } };
 type UpcomingCohort = { id: string; member_count: number; max_members: number; status: string; start_date: string; nix_date: { month: string; start_date: string } };
-type Message = { id: number; from: string; text: string; time: string; isMe: boolean };
 
 /* ── Home Screen ── */
 function HomeScreen({ user, cohort, members, onGoToChat }: { user: UserData; cohort: CohortData; members: Member[]; onGoToChat: () => void }) {
@@ -128,28 +128,103 @@ function HomeScreen({ user, cohort, members, onGoToChat }: { user: UserData; coh
 /* ── Chat Screen ── */
 function ChatScreen({ user, cohort, members }: { user: UserData; cohort: CohortData; members: Member[] }) {
   const cohortLabel = cohort.nix_date?.month ?? 'Your Cohort';
-  const [msgs, setMsgs] = useState<Message[]>([
-    { id: 1, from: members[1]?.user.username ?? 'Member', text: 'who else is struggling today ngl', time: '8:12 AM', isMe: false },
-    { id: 2, from: members[2]?.user.username ?? 'Member', text: 'same but just taking it one hour at a time', time: '8:14 AM', isMe: false },
-    { id: 3, from: user.username, text: 'we got this 💪', time: '8:17 AM', isMe: true },
-  ]);
+  const [msgs, setMsgs] = useState<DisplayMessage[]>([]);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [input, setInput] = useState('');
+  const [toast, setToast] = useState<{ msg: string } | null>(null);
   const listRef = useRef<HTMLDivElement>(null);
+  const membersRef = useRef(members);
+
+  useEffect(() => {
+    membersRef.current = members;
+  }, [members]);
+
+  const resolveAuthor = (authorId: string) =>
+    membersRef.current.find(m => m.user.id === authorId)?.user;
 
   useEffect(() => {
     if (listRef.current) listRef.current.scrollTop = listRef.current.scrollHeight;
   }, [msgs]);
 
-  const send = () => {
+  useEffect(() => {
+    let cancelled = false;
+
+    setLoadError(null);
+
+    supabase
+      .from('chat_messages')
+      .select('id, cohort_id, author_id, text, type, created_at')
+      .eq('cohort_id', cohort.id)
+      .order('created_at', { ascending: false })
+      .limit(50)
+      .then(({ data, error }) => {
+        if (cancelled) {
+          return;
+        }
+
+        if (error) {
+          setLoadError(error.message);
+          return;
+        }
+
+        const rows = ((data ?? []) as ChatMessageRow[]).slice().reverse();
+        setMsgs(rows.map(row => mapMessageRow(row, resolveAuthor(row.author_id), user.id)));
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [cohort.id, user.id]);
+
+  useEffect(() => {
+    const channel = supabase
+      .channel(`cohort-chat-${cohort.id}`)
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'chat_messages', filter: `cohort_id=eq.${cohort.id}` },
+        payload => {
+          const row = payload.new as ChatMessageRow;
+
+          setMsgs(prev => {
+            if (prev.some(message => message.id === row.id)) {
+              return prev;
+            }
+
+            return [...prev, mapMessageRow(row, resolveAuthor(row.author_id), user.id)];
+          });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [cohort.id, user.id]);
+
+  const send = async () => {
     const text = input.trim();
     if (!text) return;
-    const time = new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-    setMsgs(m => [...m, { id: Date.now(), from: user.username, text, time, isMe: true }]);
+
     setInput('');
+
+    const { error } = await supabase
+      .from('chat_messages')
+      .insert({ cohort_id: cohort.id, author_id: user.id, text, type: 'normal' });
+
+    if (error) {
+      setInput(text);
+      setToast({ msg: `Message failed to send: ${error.message}` });
+    }
   };
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
+      {toast && (
+        <div style={{ position: 'fixed', bottom: 88, left: '50%', transform: 'translateX(-50%)', zIndex: 100 }}>
+          <Toast type="error" message={toast.msg} visible onClose={() => setToast(null)} />
+        </div>
+      )}
+
       {/* Header */}
       <div style={{ padding: '18px 32px', borderBottom: '1px solid var(--color-border-subtle)', background: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(8px)', flexShrink: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
@@ -176,8 +251,14 @@ function ChatScreen({ user, cohort, members }: { user: UserData; cohort: CohortD
 
       {/* Message list */}
       <div ref={listRef} style={{ flex: 1, overflowY: 'auto', padding: '20px 32px', display: 'flex', flexDirection: 'column', gap: 0 }}>
+        {loadError && (
+          <div style={{ textAlign: 'center', padding: 24, fontFamily: 'var(--font-body)', color: 'var(--color-text-muted)' }}>
+            Couldn't load messages: {loadError}
+          </div>
+        )}
         {msgs.map((msg, i) => {
-          const showName = !msg.isMe && (i === 0 || msgs[i - 1].from !== msg.from);
+          const showName = shouldShowAuthorName(msgs, i);
+
           return (
             <div key={msg.id} style={{ display: 'flex', flexDirection: 'column', alignItems: msg.isMe ? 'flex-end' : 'flex-start', marginBottom: 8 }}>
               {showName && (
@@ -327,12 +408,12 @@ function Dashboard() {
       if (error) { setError(error.message); setLoading(false); return; }
       if (!data || !data.active_cohort) { navigate('/enrollment'); return; }
 
-      setUserData(data as unknown as UserData);
+      setUserData({ ...(data as object), id: user.id } as unknown as UserData);
 
       const cohort = data.active_cohort as unknown as CohortData;
       const { data: membersData } = await supabase
         .from('cohort_members')
-        .select('user:user_id(username, profile_image_url)')
+        .select('user:user_id(id, username, profile_image_url)')
         .eq('cohort_id', cohort.id)
         .limit(20);
 
