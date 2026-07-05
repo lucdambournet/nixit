@@ -16,11 +16,13 @@ interface SideNavProps {
   logo?: React.ReactNode;
   userAvatar?: React.ReactNode;
   userName?: string;
+  onUserClick?: () => void;
+  userActive?: boolean;
   onSignOut?: () => void;
   style?: React.CSSProperties;
 }
 
-export function SideNav({ items, activeId, onNavigate, collapsed = false, onToggle, logo, userAvatar, userName, onSignOut, style }: SideNavProps) {
+export function SideNav({ items, activeId, onNavigate, collapsed = false, onToggle, logo, userAvatar, userName, onUserClick, userActive, onSignOut, style }: SideNavProps) {
   return (
     <nav style={{
       display: 'flex', flexDirection: 'column',
@@ -102,21 +104,40 @@ export function SideNav({ items, activeId, onNavigate, collapsed = false, onTogg
           marginTop: 'auto', paddingTop: 'var(--space-4)',
           borderTop: '1px solid var(--color-border-subtle)',
           display: 'flex', alignItems: 'center',
-          gap: collapsed ? 0 : 'var(--space-3)',
+          gap: collapsed ? 0 : 'var(--space-2)',
           justifyContent: collapsed ? 'center' : 'flex-start',
           overflow: 'hidden',
         }}>
-          {userAvatar}
-          {!collapsed && userName && (
-            <span style={{
-              fontFamily: 'var(--font-body)', fontWeight: 'var(--weight-medium)',
-              fontSize: 'var(--text-sm)', color: 'var(--color-text)',
-              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-              flex: 1,
-            }}>
-              {userName}
-            </span>
-          )}
+          <button
+            onClick={onUserClick}
+            title={onUserClick ? 'View profile' : undefined}
+            disabled={!onUserClick}
+            style={{
+              flex: 1, minWidth: 0,
+              display: 'flex', alignItems: 'center',
+              gap: collapsed ? 0 : 'var(--space-3)',
+              justifyContent: collapsed ? 'center' : 'flex-start',
+              background: userActive ? 'var(--lavender-50)' : 'transparent',
+              border: 'none', borderRadius: 'var(--radius-lg)',
+              cursor: onUserClick ? 'pointer' : 'default',
+              padding: collapsed ? '6px 0' : '6px 8px',
+              transition: 'background var(--transition-fast)',
+              textAlign: 'left',
+            }}
+          >
+            {userAvatar}
+            {!collapsed && userName && (
+              <span style={{
+                fontFamily: 'var(--font-body)', fontWeight: 'var(--weight-medium)',
+                fontSize: 'var(--text-sm)',
+                color: userActive ? 'var(--lavender-600)' : 'var(--color-text)',
+                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                flex: 1,
+              }}>
+                {userName}
+              </span>
+            )}
+          </button>
           {!collapsed && onSignOut && (
             <button onClick={onSignOut} title="Sign out" style={{
               background: 'none', border: 'none', cursor: 'pointer', flexShrink: 0,
