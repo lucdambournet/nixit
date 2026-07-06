@@ -28,7 +28,7 @@ export function SideNav({ items, activeId, onNavigate, collapsed = false, onTogg
       display: 'flex', flexDirection: 'column',
       width: collapsed ? 'var(--sidebar-width-collapsed)' : 'var(--sidebar-width)',
       minHeight: '100vh',
-      background: 'white',
+      background: 'var(--surface-card)',
       borderRight: '1px solid var(--color-border-subtle)',
       padding: `20px ${collapsed ? '12px' : '14px'}`,
       gap: '2px',
@@ -70,8 +70,8 @@ export function SideNav({ items, activeId, onNavigate, collapsed = false, onTogg
             justifyContent: collapsed ? 'center' : 'flex-start',
             borderRadius: 'var(--radius-lg)', border: 'none',
             cursor: 'pointer',
-            background: active ? 'var(--lavender-50)' : 'transparent',
-            color: active ? 'var(--lavender-600)' : 'var(--color-text-secondary)',
+            background: active ? 'var(--color-primary-surface)' : 'transparent',
+            color: active ? 'var(--color-primary)' : 'var(--color-text-secondary)',
             fontFamily: 'var(--font-body)',
             fontWeight: active ? 'var(--weight-semibold)' : 'var(--weight-medium)',
             fontSize: 'var(--text-base)',
@@ -86,7 +86,7 @@ export function SideNav({ items, activeId, onNavigate, collapsed = false, onTogg
             {!collapsed && <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.label}</span>}
             {!collapsed && item.badge != null && (
               <span style={{
-                background: 'var(--lavender-100)', color: 'var(--lavender-600)',
+                background: 'var(--color-primary-surface)', color: 'var(--color-primary)',
                 fontSize: 'var(--text-xs)', fontWeight: 'var(--weight-bold)',
                 padding: '1px 7px', borderRadius: 'var(--radius-full)',
                 flexShrink: 0, fontFamily: 'var(--font-body)',
@@ -117,7 +117,7 @@ export function SideNav({ items, activeId, onNavigate, collapsed = false, onTogg
               display: 'flex', alignItems: 'center',
               gap: collapsed ? 0 : 'var(--space-3)',
               justifyContent: collapsed ? 'center' : 'flex-start',
-              background: userActive ? 'var(--lavender-50)' : 'transparent',
+              background: userActive ? 'var(--color-primary-surface)' : 'transparent',
               border: 'none', borderRadius: 'var(--radius-lg)',
               cursor: onUserClick ? 'pointer' : 'default',
               padding: collapsed ? '6px 0' : '6px 8px',
@@ -130,7 +130,7 @@ export function SideNav({ items, activeId, onNavigate, collapsed = false, onTogg
               <span style={{
                 fontFamily: 'var(--font-body)', fontWeight: 'var(--weight-medium)',
                 fontSize: 'var(--text-sm)',
-                color: userActive ? 'var(--lavender-600)' : 'var(--color-text)',
+                color: userActive ? 'var(--color-primary)' : 'var(--color-text)',
                 overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                 flex: 1,
               }}>

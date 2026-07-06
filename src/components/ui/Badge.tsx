@@ -13,7 +13,7 @@ const VARIANTS: Record<Variant, { bg: string; color: string; border?: string }> 
   lavender: { bg: 'var(--lavender-100)',        color: 'var(--lavender-600)' },
   purple:   { bg: 'var(--purple-100)',           color: 'var(--purple-600)' },
   neutral:  { bg: 'var(--neutral-100)',          color: 'var(--neutral-600)' },
-  frosted:  { bg: 'rgba(255,255,255,0.80)',       color: 'var(--lavender-500)', border: '1px solid rgba(150,126,255,0.22)' },
+  frosted:  { bg: 'var(--glass-bg-strong)',       color: 'var(--glass-accent)', border: '1px solid var(--glass-border)' },
   success:  { bg: 'var(--lavender-100)',         color: 'var(--lavender-600)' },
   warning:  { bg: 'var(--neutral-100)',          color: 'var(--neutral-600)' },
   danger:   { bg: 'var(--purple-100)',           color: 'var(--purple-600)' },

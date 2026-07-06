@@ -37,7 +37,7 @@ function MemberDot({ name, index }: { name: string; index: number }) {
       background: BG_COLORS[name.charCodeAt(0) % BG_COLORS.length],
       color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center',
       fontSize: 10, fontFamily: 'var(--font-body)', fontWeight: 600,
-      border: '2px solid white', flexShrink: 0,
+      border: '2px solid var(--surface-card)', flexShrink: 0,
       marginLeft: index > 0 ? -8 : 0,
       position: 'relative', zIndex: 10 - index,
     }}>
@@ -56,7 +56,7 @@ export function NixDateCard({ month, year, joined = 0, total = 25, status = 'upc
   const sc        = STATUS_MAP[status] ?? STATUS_MAP.upcoming;
 
   return (
-    <div style={{ background: 'white', borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-md)', border: '1px solid var(--color-border-subtle)', overflow: 'hidden', ...style }}>
+    <div style={{ background: 'var(--surface-card)', borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-md)', border: '1px solid var(--color-border-subtle)', overflow: 'hidden', ...style }}>
       {/* Header band */}
       <div style={{ background: sc.grad, padding: '18px 22px 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -102,7 +102,7 @@ export function NixDateCard({ month, year, joined = 0, total = 25, status = 'upc
             <span style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-xs)', fontWeight: 'var(--weight-semibold)', color: 'var(--color-text-muted)', letterSpacing: 'var(--tracking-wider)' }}>SPOTS FILLED</span>
             <span style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-xs)', color: sc.accent }}>{joined}/{total}</span>
           </div>
-          <div style={{ height: 5, background: 'var(--neutral-100)', borderRadius: 'var(--radius-full)', overflow: 'hidden' }}>
+          <div style={{ height: 5, background: 'var(--color-border)', borderRadius: 'var(--radius-full)', overflow: 'hidden' }}>
             <div style={{ width: `${pct}%`, height: '100%', background: sc.accent, borderRadius: 'var(--radius-full)', transition: 'width 0.6s var(--ease-out)' }} />
           </div>
           {spotsLeft > 0 && status !== 'past' && (
@@ -126,19 +126,19 @@ export function NixDateCard({ month, year, joined = 0, total = 25, status = 'upc
 
         {/* CTA */}
         {isJoined ? (
-          <div style={{ padding: '11px 18px', background: 'var(--lavender-50)', borderRadius: 'var(--radius-md)', border: '1px solid var(--lavender-200)', display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ color: 'var(--lavender-600)', fontWeight: 'var(--weight-semibold)', fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)' }}>✓ You're in this cohort</span>
+          <div style={{ padding: '11px 18px', background: 'var(--color-success-surface)', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-success-border)', display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ color: 'var(--color-primary)', fontWeight: 'var(--weight-semibold)', fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)' }}>✓ You're in this cohort</span>
           </div>
         ) : sc.canJoin ? (
           <button onClick={onJoin} style={{
             width: '100%', padding: '12px 20px',
-            background: 'rgba(255,255,255,0.90)',
+            background: 'var(--glass-bg-strong)',
             backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
-            color: sc.accent, border: '1.5px solid rgba(150,126,255,0.28)',
+            color: 'var(--glass-accent)', border: '1.5px solid var(--glass-border)',
             borderRadius: 'var(--radius-md)',
             fontFamily: 'var(--font-body)', fontSize: 'var(--text-base)',
             fontWeight: 'var(--weight-semibold)', cursor: 'pointer',
-            boxShadow: '0 2px 12px rgba(122,98,245,0.10)',
+            boxShadow: 'var(--glow-frosted)',
             transition: 'all var(--transition-base)',
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
           }}>

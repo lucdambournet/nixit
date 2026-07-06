@@ -1,6 +1,6 @@
 import React from 'react';
 
-type Variant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'outline' | 'purple';
+type Variant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'outline' | 'purple' | 'solid';
 type Size = 'sm' | 'md' | 'lg';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
@@ -10,21 +10,29 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const glass = (color: string, border: string): React.CSSProperties => ({
-  background: 'rgba(255,255,255,0.86)',
+  background: 'var(--glass-bg-strong)',
   backdropFilter: 'blur(16px)',
   WebkitBackdropFilter: 'blur(16px)',
   color,
   border: `1.5px solid ${border}`,
-  boxShadow: '0 2px 12px rgba(122,98,245,0.10)',
+  boxShadow: 'var(--glow-frosted)',
 });
 
 const VARIANTS: Record<Variant, React.CSSProperties> = {
-  primary:   glass('var(--lavender-600)', 'rgba(150,126,255,0.32)'),
-  secondary: { ...glass('var(--color-text-secondary)', 'rgba(0,0,0,0.09)'), boxShadow: 'var(--shadow-xs)' },
-  ghost:     { background: 'transparent', color: 'var(--lavender-500)', border: 'none', boxShadow: 'none', backdropFilter: 'none', WebkitBackdropFilter: 'none' },
-  danger:    glass('var(--purple-600)', 'rgba(61,31,138,0.22)'),
-  outline:   { background: 'transparent', color: 'var(--lavender-600)', border: '1.5px solid var(--lavender-300)', boxShadow: 'none' },
-  purple:    glass('var(--purple-600)', 'rgba(61,31,138,0.28)'),
+  primary:   glass('var(--glass-accent)', 'rgba(150,126,255,0.32)'),
+  secondary: { ...glass('var(--glass-muted)', 'var(--color-border)'), boxShadow: 'var(--shadow-xs)' },
+  ghost:     { background: 'transparent', color: 'var(--color-primary)', border: 'none', boxShadow: 'none', backdropFilter: 'none', WebkitBackdropFilter: 'none' },
+  danger:    glass('var(--glass-accent-deep)', 'rgba(150,126,255,0.28)'),
+  outline:   { background: 'transparent', color: 'var(--color-primary)', border: '1.5px solid var(--color-primary-border)', boxShadow: 'none' },
+  purple:    glass('var(--glass-accent-deep)', 'rgba(150,126,255,0.30)'),
+  // Solid purple → lavender gradient with a luminous glow — for hero CTAs
+  solid: {
+    background: 'linear-gradient(135deg, var(--purple-500) 0%, var(--lavender-500) 100%)',
+    color: '#fff',
+    border: 'none',
+    boxShadow: 'var(--glow-purple-solid)',
+    textShadow: '0 1px 2px rgba(45,21,96,0.35)',
+  },
 };
 
 const SIZES: Record<Size, React.CSSProperties> = {

@@ -12,10 +12,10 @@ interface ToastProps {
 }
 
 const TYPES: Record<ToastType, { bg: string; border: string; iconBg: string; icon: string; blur?: boolean }> = {
-  default: { bg: 'rgba(255,255,255,0.90)', border: 'rgba(150,126,255,0.22)', iconBg: 'var(--lavender-400)', icon: '✦', blur: true },
-  success: { bg: 'var(--lavender-50)',     border: 'var(--lavender-200)',    iconBg: 'var(--lavender-500)', icon: '✓' },
-  warning: { bg: 'var(--neutral-50)',      border: 'var(--neutral-200)',     iconBg: 'var(--neutral-500)',  icon: '!' },
-  error:   { bg: 'var(--purple-50)',       border: 'var(--purple-100)',      iconBg: 'var(--purple-600)',   icon: '✕' },
+  default: { bg: 'var(--glass-bg-strong)',       border: 'var(--glass-border)',        iconBg: 'var(--lavender-400)', icon: '✦', blur: true },
+  success: { bg: 'var(--color-success-surface)', border: 'var(--color-success-border)', iconBg: 'var(--lavender-500)', icon: '✓' },
+  warning: { bg: 'var(--color-warning-surface)', border: 'var(--color-warning-border)', iconBg: 'var(--neutral-500)',  icon: '!' },
+  error:   { bg: 'var(--color-danger-surface)',  border: 'var(--color-danger-border)',  iconBg: 'var(--purple-600)',   icon: '✕' },
 };
 
 export function Toast({ message, type = 'default', visible = true, onClose, action, style }: ToastProps) {
@@ -56,7 +56,7 @@ export function Toast({ message, type = 'default', visible = true, onClose, acti
         <button onClick={action.onClick} style={{
           background: 'none', border: 'none', cursor: 'pointer',
           fontFamily: 'var(--font-body)', fontSize: 'var(--text-xs)',
-          fontWeight: 'var(--weight-semibold)', color: 'var(--lavender-600)',
+          fontWeight: 'var(--weight-semibold)', color: 'var(--color-primary)',
           flexShrink: 0, padding: '4px 6px',
         }}>
           {action.label}

@@ -9,15 +9,15 @@ interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 const VARIANTS: Record<Variant, React.CSSProperties> = {
-  default:  { background: '#fff',                   boxShadow: 'var(--shadow-sm)', border: '1px solid var(--color-border-subtle)' },
-  elevated: { background: '#fff',                   boxShadow: 'var(--shadow-md)', border: 'none' },
-  flat:     { background: 'var(--neutral-50)',      boxShadow: 'none',             border: '1px solid var(--color-border)' },
-  lavender: { background: 'var(--lavender-50)',     boxShadow: 'none',             border: '1px solid var(--lavender-200)' },
-  purple:   { background: 'var(--purple-50)',       boxShadow: 'none',             border: '1px solid var(--purple-100)' },
+  default:  { background: 'var(--surface-card)',    boxShadow: 'var(--shadow-sm)', border: '1px solid var(--color-border-subtle)' },
+  elevated: { background: 'var(--surface-card)',    boxShadow: 'var(--shadow-md), var(--glow-frosted)', border: '1px solid var(--color-border-subtle)' },
+  flat:     { background: 'var(--surface-sunken)',  boxShadow: 'none',             border: '1px solid var(--color-border)' },
+  lavender: { background: 'var(--tint-lavender)',   boxShadow: 'none',             border: '1px solid var(--tint-lavender-border)', backgroundImage: 'radial-gradient(circle, var(--dot-lavender) 1px, transparent 1px)', backgroundSize: '18px 18px' },
+  purple:   { background: 'var(--tint-purple)',     boxShadow: 'none',             border: '1px solid var(--tint-purple-border)',   backgroundImage: 'radial-gradient(circle, var(--dot-purple) 1px, transparent 1px)',   backgroundSize: '18px 18px' },
   glass:    {
-    background: 'rgba(255,255,255,0.72)',
-    boxShadow: 'var(--shadow-md)',
-    border: '1px solid rgba(255,255,255,0.85)',
+    background: 'var(--glass-bg)',
+    boxShadow: 'var(--shadow-md), var(--glow-frosted)',
+    border: '1px solid var(--glass-border)',
     backdropFilter: 'var(--blur-md)',
     WebkitBackdropFilter: 'var(--blur-md)',
   },

@@ -64,7 +64,7 @@ export function Avatar({ src, name, size = 'md', status, style }: AvatarProps) {
           height: Math.max(8, Math.round(px * 0.26)),
           borderRadius: 'var(--radius-full)',
           background: STATUS_COLORS[status] ?? STATUS_COLORS.offline,
-          border: '2px solid white',
+          border: '2px solid var(--surface-card)',
           display: 'block',
         }} />
       )}

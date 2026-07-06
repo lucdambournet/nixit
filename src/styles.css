@@ -1,13 +1,11 @@
 /* ============================================================
    NixIt Design System — Global Stylesheet
-   Lavender · Dark Purple · Neutrals — Geo + JetBrains Mono
+   Lavender · Dark Purple · Neutrals — Jura + JetBrains Mono
    Synced from the NixIt Design System project (claude.ai/design)
    ============================================================ */
 
 /* ── Fonts ── */
-/* ⚠️ Geo ships in Regular (400) only — weight variants render as
-   synthesised bold; keep key copy weight-agnostic. */
-@import url('https://fonts.googleapis.com/css2?family=Geo&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Jura:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
 /* ── Reset ── */
 *, *::before, *::after {
@@ -31,6 +29,7 @@ body {
   color: var(--color-text);
   background-color: var(--color-bg);
   text-wrap: pretty;
+  transition: background-color var(--transition-base), color var(--transition-base);
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -53,8 +52,8 @@ img, video { max-width: 100%; height: auto; }
 
 :root {
   /* ── Font Families ── */
-  --font-display: 'Geo', system-ui, sans-serif;
-  --font-body:    'Geo', system-ui, sans-serif;
+  --font-display: 'Jura', system-ui, sans-serif;
+  --font-body:    'Jura', system-ui, sans-serif;
   --font-mono:    'JetBrains Mono', 'Fira Code', monospace;
 
   /* ── Type Scale (15px base) ── */
@@ -112,7 +111,7 @@ img, video { max-width: 100%; height: auto; }
   --padding-btn-sm:  6px 14px;
   --padding-btn-md:  10px 22px;
   --padding-btn-lg:  13px 28px;
-  --padding-input:   11px 14px;
+  --padding-input:   11px 20px;
   --padding-card-sm: var(--space-4);
   --padding-card-md: var(--space-5);
   --padding-card-lg: var(--space-8);
@@ -157,7 +156,10 @@ img, video { max-width: 100%; height: auto; }
   --neutral-700: #3D4956;
   --neutral-800: #2A3440;
 
-  /* ── Semantic Aliases ── */
+  /* ============================================================
+     Semantic Aliases — LIGHT THEME (default)
+     ============================================================ */
+
   --color-primary:          var(--lavender-500);
   --color-primary-hover:    var(--lavender-600);
   --color-primary-active:   var(--purple-600);
@@ -177,6 +179,8 @@ img, video { max-width: 100%; height: auto; }
   --color-surface:          var(--neutral-50);
   --color-surface-raised:   #FFFFFF;
   --color-surface-overlay:  rgba(255, 255, 255, 0.90);
+  --surface-card:           #FFFFFF;   /* opaque card fill */
+  --surface-sunken:         var(--neutral-50);
 
   /* Text */
   --color-text:             var(--neutral-800);
@@ -212,11 +216,19 @@ img, video { max-width: 100%; height: auto; }
   --color-purple:          var(--purple-600);
   --color-purple-deep:     var(--purple-700);
 
-  /* ── Blob Decoration Colors — lavender + deep purple only ── */
-  --blob-lavender:      rgba(150, 126, 255, 0.18);
-  --blob-lavender-soft: rgba(180, 160, 255, 0.11);
-  --blob-purple:        rgba(61,  31, 138, 0.10);
-  --blob-purple-deep:   rgba(45,  21,  96, 0.07);
+  /* Tinted decorative surfaces (Card lavender/purple variants) */
+  --tint-lavender:         var(--lavender-50);
+  --tint-lavender-border:  var(--lavender-200);
+  --tint-purple:           var(--purple-50);
+  --tint-purple-border:    var(--purple-100);
+
+  /* Frosted glass (buttons, glass cards, toasts) */
+  --glass-bg:          rgba(255, 255, 255, 0.72);
+  --glass-bg-strong:   rgba(255, 255, 255, 0.86);
+  --glass-border:      rgba(255, 255, 255, 0.85);
+  --glass-accent:      var(--lavender-600);   /* lavender text on glass */
+  --glass-accent-deep: var(--purple-600);     /* purple text on glass */
+  --glass-muted:       var(--neutral-600);    /* neutral text on glass */
 
   /* ── Border Radius (angular-leaning) ── */
   --radius-xs:   3px;
@@ -237,6 +249,14 @@ img, video { max-width: 100%; height: auto; }
 
   --shadow-lavender: 0 6px 24px rgba(122, 98, 245, 0.20);
   --shadow-purple:   0 6px 24px rgba(61, 31, 138, 0.18);
+
+  /* ── Glow — luminous halos for emphasis ── */
+  --glow-lavender:        0 0 24px rgba(122, 98, 245, 0.35);
+  --glow-lavender-lg:     0 0 40px rgba(122, 98, 245, 0.45), 0 4px 16px rgba(122, 98, 245, 0.25);
+  --glow-purple:          0 0 24px rgba(93, 45, 200, 0.40);
+  --glow-purple-solid:    0 6px 20px rgba(74, 32, 160, 0.45), 0 0 32px rgba(122, 98, 245, 0.40);
+  --glow-purple-solid-lg: 0 8px 28px rgba(74, 32, 160, 0.55), 0 0 48px rgba(122, 98, 245, 0.50);
+  --glow-frosted:         0 0 20px rgba(150, 126, 255, 0.22), 0 2px 12px rgba(122, 98, 245, 0.14);
 
   /* ── Borders ── */
   --border-hairline: 0.5px solid var(--neutral-200);
@@ -269,6 +289,103 @@ img, video { max-width: 100%; height: auto; }
   --transition-base:   var(--duration-base) var(--ease-out);
   --transition-spring: var(--duration-slow) var(--ease-spring);
   --transition-bounce: var(--duration-slow) var(--ease-bounce);
+
+  /* ============================================================
+     Blob Decoration Colors — lavender + deep purple only
+     ============================================================ */
+
+  --blob-lavender:      rgba(150, 126, 255, 0.18);
+  --blob-lavender-soft: rgba(180, 160, 255, 0.11);
+  --blob-purple:        rgba(61,  31, 138, 0.10);
+  --blob-purple-deep:   rgba(45,  21,  96, 0.07);
+
+  /* Dot-texture colors */
+  --dot-color:          var(--neutral-300);
+  --dot-color-strong:   var(--neutral-400);
+  --dot-lavender:       rgba(122, 98, 245, 0.18);
+  --dot-purple:         rgba(61,  31, 138, 0.14);
+
+  color-scheme: light;
+}
+
+/* ============================================================
+   DARK THEME — applied when [data-theme="dark"] is set on <html>.
+   For system preference, opt in with a one-liner:
+   if (matchMedia('(prefers-color-scheme: dark)').matches)
+     document.documentElement.dataset.theme = 'dark';
+   ============================================================ */
+
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  /* Accents (brighter for contrast on dark) */
+  --color-primary:          var(--lavender-300);
+  --color-primary-hover:    var(--lavender-200);
+  --color-primary-active:   var(--lavender-400);
+  --color-primary-surface:  rgba(122, 98, 245, 0.16);
+  --color-primary-border:   rgba(150, 126, 255, 0.32);
+  --color-accent:           var(--lavender-300);
+  --color-accent-surface:   rgba(122, 98, 245, 0.14);
+
+  /* Surfaces — purple-tinted darks (no pure black) */
+  --color-bg:               #110D1A;
+  --color-surface:          #1A1428;
+  --color-surface-raised:   #221A34;
+  --color-surface-overlay:  rgba(26, 20, 40, 0.92);
+  --surface-card:           #1E1730;
+  --surface-sunken:         #16101F;
+
+  /* Text */
+  --color-text:             #ECE7F7;
+  --color-text-secondary:   #BBB2D2;
+  --color-text-muted:       #8A82A0;
+  --color-text-placeholder: #655D7A;
+  --color-text-inverse:     #16101F;
+
+  /* Borders */
+  --color-border:           rgba(184, 166, 255, 0.16);
+  --color-border-subtle:    rgba(184, 166, 255, 0.09);
+  --color-border-focus:     var(--lavender-400);
+
+  /* Status surfaces → translucent on dark */
+  --color-success:          var(--lavender-300);
+  --color-success-surface:  rgba(122, 98, 245, 0.16);
+  --color-success-border:   rgba(150, 126, 255, 0.28);
+  --color-warning:          var(--neutral-300);
+  --color-warning-surface:  rgba(180, 180, 205, 0.10);
+  --color-warning-border:   rgba(180, 180, 205, 0.18);
+  --color-danger:           var(--lavender-300);
+  --color-danger-surface:   rgba(120, 90, 235, 0.20);
+  --color-danger-border:    rgba(150, 126, 255, 0.28);
+  --color-info:             var(--lavender-300);
+  --color-info-surface:     rgba(122, 98, 245, 0.14);
+  --color-info-border:      rgba(150, 126, 255, 0.24);
+
+  /* Tinted decorative surfaces */
+  --tint-lavender:          rgba(122, 98, 245, 0.16);
+  --tint-lavender-border:   rgba(150, 126, 255, 0.28);
+  --tint-purple:            rgba(120, 90, 235, 0.20);
+  --tint-purple-border:     rgba(150, 126, 255, 0.26);
+
+  /* Frosted glass — dark */
+  --glass-bg:          rgba(42, 33, 62, 0.60);
+  --glass-bg-strong:   rgba(48, 38, 70, 0.80);
+  --glass-border:      rgba(184, 166, 255, 0.22);
+  --glass-accent:      var(--lavender-200);
+  --glass-accent-deep: var(--lavender-300);
+  --glass-muted:       #C6BEDC;
+
+  /* Blobs — brighter and more saturated on dark */
+  --blob-lavender:      rgba(150, 126, 255, 0.32);
+  --blob-lavender-soft: rgba(184, 166, 255, 0.20);
+  --blob-purple:        rgba(110, 80, 235, 0.26);
+  --blob-purple-deep:   rgba(74,  32, 160, 0.22);
+
+  /* Dots */
+  --dot-color:          rgba(184, 166, 255, 0.16);
+  --dot-color-strong:   rgba(184, 166, 255, 0.26);
+  --dot-lavender:       rgba(150, 126, 255, 0.22);
+  --dot-purple:         rgba(150, 126, 255, 0.16);
 }
 
 /* ── Blob Background Utility ──────────────────────────────── */
@@ -284,21 +401,73 @@ img, video { max-width: 100%; height: auto; }
   z-index: -1;
   pointer-events: none;
   background:
-    radial-gradient(ellipse 720px 560px at 12%  8%, var(--blob-lavender),      transparent 68%),
-    radial-gradient(ellipse 520px 620px at 90% 82%, var(--blob-purple),        transparent 68%),
-    radial-gradient(ellipse 640px 420px at 74%  4%, var(--blob-lavender-soft), transparent 68%),
-    radial-gradient(ellipse 420px 520px at  4% 88%, var(--blob-purple-deep),   transparent 68%);
+    radial-gradient(ellipse 720px 560px at 12%   8%, var(--blob-lavender),      transparent 68%),
+    radial-gradient(ellipse 520px 620px at 90%  82%, var(--blob-purple),         transparent 68%),
+    radial-gradient(ellipse 640px 420px at 74%   4%, var(--blob-lavender-soft),  transparent 68%),
+    radial-gradient(ellipse 420px 520px at  4%  88%, var(--blob-purple-deep),    transparent 68%);
+  filter: saturate(1.2);
+}
+/* Dot overlay on top of the blobs — themeable */
+.nixit-blob-bg::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image: radial-gradient(circle, var(--dot-color) 1px, transparent 1px);
+  background-size: 22px 22px;
+  opacity: 0.6;
 }
 
-/* ── Dot Pattern Texture ─────────────────────────────────── */
-/* Subtle repeating dot grid — layer over white surfaces */
+/* ── Dot Pattern Texture Utilities ───────────────────────── */
+/* All dot utilities are theme-aware via --dot-* tokens.       */
+
+/* Standard 20px neutral grid */
 .nixit-dot-bg {
-  background-image: radial-gradient(circle, var(--neutral-300) 1px, transparent 1px);
+  background-image: radial-gradient(circle, var(--dot-color) 1px, transparent 1px);
   background-size: 20px 20px;
 }
+
+/* Finer 12px grid for smaller contexts */
 .nixit-dot-bg-fine {
-  background-image: radial-gradient(circle, var(--neutral-200) 1px, transparent 1px);
+  background-image: radial-gradient(circle, var(--dot-color) 1px, transparent 1px);
   background-size: 12px 12px;
+}
+
+/* Dense 10px grid — busy texture for hero panels */
+.nixit-dot-bg-dense {
+  background-image: radial-gradient(circle, var(--dot-color) 1px, transparent 1px);
+  background-size: 10px 10px;
+}
+
+/* Lavender-tinted dots — for accent panels */
+.nixit-dot-bg-lavender {
+  background-image: radial-gradient(circle, var(--dot-lavender) 1.4px, transparent 1.4px);
+  background-size: 18px 18px;
+}
+
+/* Larger, bolder 28px grid */
+.nixit-dot-bg-bold {
+  background-image: radial-gradient(circle, var(--dot-color-strong) 1.6px, transparent 1.6px);
+  background-size: 28px 28px;
+}
+
+/* Diagonal / offset dot grid — every other row nudged for a woven look */
+.nixit-dot-bg-weave {
+  background-image:
+    radial-gradient(circle, var(--dot-color) 1px, transparent 1px),
+    radial-gradient(circle, var(--dot-color) 1px, transparent 1px);
+  background-size: 24px 24px;
+  background-position: 0 0, 12px 12px;
+}
+
+/* Crosshatch grid lines — subtle graph texture */
+.nixit-grid-bg {
+  background-image:
+    linear-gradient(var(--dot-color) 1px, transparent 1px),
+    linear-gradient(90deg, var(--dot-color) 1px, transparent 1px);
+  background-size: 28px 28px;
+  opacity: 0.9;
 }
 
 /* ── Scrollbar ── */

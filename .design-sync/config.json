@@ -1,0 +1,34 @@
+{
+  "projectId": "6b493516-1786-40aa-9d19-9e3a5cb81d75",
+  "shape": "package",
+  "pkg": "nixit",
+  "globalName": "NixItDS",
+  "entry": ".design-sync/entry.ts",
+  "tsconfig": "tsconfig.json",
+  "cssEntry": "src/styles.css",
+  "docsDir": ".design-sync/docstubs",
+  "componentSrcMap": {
+    "Avatar": "src/components/ui/Avatar.tsx",
+    "Badge": "src/components/ui/Badge.tsx",
+    "Button": "src/components/ui/Button.tsx",
+    "Card": "src/components/ui/Card.tsx",
+    "Input": "src/components/ui/Input.tsx",
+    "Logo": "src/components/ui/Logo.tsx",
+    "Toast": "src/components/ui/Toast.tsx",
+    "SideNav": "src/components/navigation/SideNav.tsx",
+    "CohortTimer": "src/components/nix/CohortTimer.tsx",
+    "NixDateCard": "src/components/nix/NixDateCard.tsx"
+  },
+  "dtsPropsFor": {
+    "Avatar": "  src?: string | null;\n  name?: string;\n  size?: \"xs\" | \"sm\" | \"md\" | \"lg\" | \"xl\" | \"2xl\";\n  status?: \"online\" | \"away\" | \"busy\" | \"offline\";\n  style?: React.CSSProperties;",
+    "Badge": "  variant?: \"lavender\" | \"purple\" | \"neutral\" | \"frosted\" | \"success\" | \"warning\" | \"danger\";\n  size?: \"sm\" | \"md\" | \"lg\";\n  dot?: boolean;\n  children?: React.ReactNode;\n  style?: React.CSSProperties;",
+    "Button": "  variant?: \"primary\" | \"secondary\" | \"ghost\" | \"danger\" | \"outline\" | \"purple\";\n  size?: \"sm\" | \"md\" | \"lg\";\n  icon?: React.ReactNode;\n  children?: React.ReactNode;\n  disabled?: boolean;\n  onClick?: () => void;\n  style?: React.CSSProperties;",
+    "Card": "  variant?: \"default\" | \"elevated\" | \"flat\" | \"lavender\" | \"purple\" | \"glass\";\n  padding?: \"none\" | \"sm\" | \"md\" | \"lg\";\n  children?: React.ReactNode;\n  style?: React.CSSProperties;",
+    "Input": "  label?: string;\n  error?: string;\n  hint?: string;\n  prefix?: React.ReactNode;\n  suffix?: React.ReactNode;\n  inputStyle?: React.CSSProperties;\n  type?: string;\n  disabled?: boolean;\n  value?: string;\n  placeholder?: string;\n  style?: React.CSSProperties;",
+    "Logo": "  height?: number;\n  variant?: \"full\" | \"mark\";\n  style?: React.CSSProperties;",
+    "Toast": "  message: string;\n  type?: \"default\" | \"success\" | \"warning\" | \"error\";\n  visible?: boolean;\n  onClose?: () => void;\n  action?: { label: string; onClick: () => void };\n  style?: React.CSSProperties;",
+    "SideNav": "  items: { id: string; label: string; icon?: React.ReactNode; badge?: number }[];\n  activeId?: string;\n  onNavigate?: (id: string) => void;\n  collapsed?: boolean;\n  onToggle?: () => void;\n  logo?: React.ReactNode;\n  userAvatar?: React.ReactNode;\n  userName?: string;\n  onUserClick?: () => void;\n  userActive?: boolean;\n  onSignOut?: () => void;\n  style?: React.CSSProperties;",
+    "CohortTimer": "  startDate: string;\n  label?: string;\n  style?: React.CSSProperties;",
+    "NixDateCard": "  month: number;\n  year: number;\n  joined?: number;\n  total?: number;\n  status?: \"upcoming\" | \"active\" | \"full\" | \"past\";\n  isJoined?: boolean;\n  onJoin?: () => void;\n  description?: string;\n  features?: string[];\n  members?: string[];\n  style?: React.CSSProperties;"
+  }
+}
