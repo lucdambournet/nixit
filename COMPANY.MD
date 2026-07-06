@@ -75,7 +75,11 @@ Users can talk with the other people in their cohort. The chat is there to make 
 
 ### 5. Leaving a cohort
 
-If a user wants to exit, the product supports leaving or tapping out of the cohort so they are not locked into a group forever.
+If a user wants to exit, they do not simply leave instantly. NixIt uses a structured "tap out" mechanic.
+
+A user can only be in one cohort at a time. To leave that cohort, a majority of the active users in the cohort must agree to let them out. Once released, the user can join another cohort.
+
+This mechanic is intentional. It gives the cohort a chance to step in and support someone at the exact moment they are most likely to want to quit the quitting process itself. Instead of disappearing silently during a hard moment, the user has to surface that moment to the group, which creates one more opportunity for encouragement, intervention, and accountability.
 
 ## What Makes NixIt Different
 
@@ -87,6 +91,7 @@ Its differentiation comes from combining:
 - a small-group structure,
 - visible shared progress,
 - accountability through participation,
+- a tap-out rule that requires cohort approval,
 - a product flow built around quitting together rather than consuming content alone.
 
 The product is intentionally narrow. It does not try to be a broad wellness platform. It focuses on one use case: helping people quit nicotine with the support and pressure of a cohort.
@@ -106,7 +111,7 @@ The website currently centers on the core quitting flow:
 - dashboard with a shared nicotine-free timer,
 - cohort member visibility,
 - cohort chat,
-- basic leave or tap-out behavior.
+- tap-out behavior governed by majority approval from active cohort members before a user can leave and join another cohort.
 
 ## Near-Term Product Direction
 
@@ -114,7 +119,7 @@ The broader MVP direction described in the product spec includes adding stronger
 
 - explicit "need help" alerts,
 - push notifications for important cohort activity,
-- richer tap-out handling,
+- richer tap-out handling and release workflows,
 - deeper in-app accountability loops.
 
 Those features are part of the intended product direction, but the website should still be understood first as a cohort quitting experience, not as a general social network.
@@ -135,4 +140,4 @@ In practical terms, NixIt aims to make quitting feel:
 
 If you hand this to someone who has never seen NixIt before, the shortest accurate summary is this:
 
-NixIt is a web product for quitting nicotine with other people. Users sign up, choose a shared monthly quit date, join a small cohort, and use a dashboard plus group chat to stay accountable as they quit together.
+NixIt is a web product for quitting nicotine with other people. Users sign up, choose a shared monthly quit date, join a small cohort, and use a dashboard plus group chat to stay accountable as they quit together. If they want to leave, the cohort must agree to let them out, creating one more chance for the group to help when the user needs it most.
