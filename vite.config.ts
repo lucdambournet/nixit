@@ -4,6 +4,8 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
+const productionBase = "/nixit/";
+
 async function findUserByEmail(
   supabaseUrl: string,
   headers: Record<string, string>,
@@ -23,7 +25,8 @@ async function findUserByEmail(
   return result?.users?.[0] ?? null;
 }
 
-export default defineConfig({
+export default defineConfig(({ command }) => ({
+  base: command === "build" ? productionBase : "/",
   plugins: [
     react(),
     {
@@ -279,4 +282,4 @@ export default defineConfig({
   server: {
     port: 4173,
   },
-});
+}));
