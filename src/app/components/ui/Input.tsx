@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useId, useState } from 'react';
 
 interface InputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'prefix' | 'suffix'> {
   label?: string;
@@ -11,6 +11,8 @@ interface InputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, '
 
 export function Input({ label, error, hint, prefix, suffix, type = 'text', disabled, style, inputStyle, ...props }: InputProps) {
   const [focused, setFocused] = useState(false);
+  const fallbackId = useId();
+  const inputId = props.id ?? fallbackId;
 
   const borderColor = error
     ? 'var(--color-danger)'
@@ -23,7 +25,7 @@ export function Input({ label, error, hint, prefix, suffix, type = 'text', disab
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', ...style }}>
       {label && (
-        <label style={{
+        <label htmlFor={inputId} style={{
           fontFamily: 'var(--font-body)',
           fontSize: 'var(--text-sm)',
           fontWeight: 'var(--weight-semibold)',
@@ -49,6 +51,7 @@ export function Input({ label, error, hint, prefix, suffix, type = 'text', disab
           </span>
         )}
         <input
+          id={inputId}
           type={type}
           disabled={disabled}
           onFocus={() => setFocused(true)}

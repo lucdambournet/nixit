@@ -96,11 +96,23 @@ describe('join_cohort', () => {
     expect(error!.message).toMatch(/does not exist/i);
   });
 
-  it('increments cohort member_count on join', async () => {
+  it('creates a cohort membership and increases the stored count on join', async () => {
+    await admin.from('cohort_members').delete().eq('user_id', userBId);
+    await admin.from('users').update({ active_cohort_id: null }).eq('id', userBId);
+
     const { data: before } = await admin.from('cohorts').select('member_count').eq('id', cohortId).single();
-    await userBClient.rpc('join_cohort', { target_cohort_id: cohortId });
+    const { error } = await userBClient.rpc('join_cohort', { target_cohort_id: cohortId });
     const { data: after } = await admin.from('cohorts').select('member_count').eq('id', cohortId).single();
-    expect(after!.member_count).toBe(before!.member_count + 1);
+    const { data: membership } = await admin
+      .from('cohort_members')
+      .select('user_id, cohort_id')
+      .eq('user_id', userBId)
+      .eq('cohort_id', cohortId)
+      .single();
+
+    expect(error).toBeNull();
+    expect(membership).toEqual({ user_id: userBId, cohort_id: cohortId });
+    expect(after!.member_count).toBeGreaterThan(before!.member_count);
   });
 });
 

@@ -7,6 +7,7 @@ alter table public.nix_dates       enable row level security;
 alter table public.cohorts         enable row level security;
 alter table public.users           enable row level security;
 alter table public.cohort_members  enable row level security;
+alter table public.chat_messages   enable row level security;
 
 -- ── nix_dates: any signed-in user can read ───────────────────
 drop policy if exists "authenticated can read nix_dates" on public.nix_dates;
@@ -76,3 +77,23 @@ create policy "users can read own row"
       where cohort_id in (select get_my_cohort_ids())
     )
   );
+
+grant select, insert on table public.chat_messages to authenticated;
+grant select, insert, update, delete on table public.chat_messages to service_role;
+
+drop policy if exists "cohort members can read their cohort's messages" on public.chat_messages;
+create policy "cohort members can read their cohort's messages"
+  on public.chat_messages for select
+  to authenticated
+  using (cohort_id in (select get_my_cohort_ids()));
+
+drop policy if exists "cohort members can send messages as themselves" on public.chat_messages;
+create policy "cohort members can send messages as themselves"
+  on public.chat_messages for insert
+  to authenticated
+  with check (
+    author_id = (select auth.uid())
+    and cohort_id in (select get_my_cohort_ids())
+  );
+
+alter publication supabase_realtime add table public.chat_messages;

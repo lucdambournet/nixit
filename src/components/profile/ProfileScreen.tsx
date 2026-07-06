@@ -1,11 +1,11 @@
 import React, { useRef, useState } from 'react';
-import { supabase } from '../../lib/supabase';
-import { Avatar } from '../ui/Avatar';
-import { Button } from '../ui/Button';
-import { Card } from '../ui/Card';
-import { Input } from '../ui/Input';
-import { Badge } from '../ui/Badge';
-import { Toast } from '../ui/Toast';
+import { supabase } from '../../app/lib/supabase';
+import { Avatar } from '../../app/components/ui/Avatar';
+import { Button } from '../../app/components/ui/Button';
+import { Card } from '../../app/components/ui/Card';
+import { Input } from '../../app/components/ui/Input';
+import { Badge } from '../../app/components/ui/Badge';
+import { Toast } from '../../app/components/ui/Toast';
 
 /* ── Preferences (client-only, persisted to localStorage — no backend column yet) ── */
 const PREFS_KEY = 'nixit:prefs';
@@ -217,7 +217,7 @@ export function ProfileScreen({ user, onUserUpdate, onSignOut }: ProfileScreenPr
           <Input
             label="Username"
             value={username}
-            onChange={e => setUsername(e.target.value)}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setUsername(e.target.value)}
             placeholder="your_handle"
             autoComplete="username"
             style={{ flex: 1, minWidth: 220 }}
@@ -236,7 +236,7 @@ export function ProfileScreen({ user, onUserUpdate, onSignOut }: ProfileScreenPr
           label="New password"
           type="password"
           value={newPassword}
-          onChange={e => setNewPassword(e.target.value)}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewPassword(e.target.value)}
           placeholder="••••••••"
           autoComplete="new-password"
           error={pwError ?? undefined}
@@ -245,7 +245,7 @@ export function ProfileScreen({ user, onUserUpdate, onSignOut }: ProfileScreenPr
           label="Confirm new password"
           type="password"
           value={confirmPassword}
-          onChange={e => setConfirmPassword(e.target.value)}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setConfirmPassword(e.target.value)}
           placeholder="••••••••"
           autoComplete="new-password"
         />
