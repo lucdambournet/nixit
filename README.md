@@ -34,6 +34,14 @@ Vite + React app scaffold for the NixIt cohort-based nicotine cessation experien
    npm run dev
    ```
 
+## Production
+
+The production app is deployed to GitHub Pages from the `main` branch via [deploy-pages.yml](.github/workflows/deploy-pages.yml).
+
+- Production URL: https://lucdambournet.github.io/nixit/
+- SPA routing fallback is published as `404.html` so dashboard and enrollment routes can refresh correctly.
+- Build-time frontend environment values are the public Supabase URL and anon key for the NixIt project.
+
 ## Supabase schema
 
 The initial schema includes:
