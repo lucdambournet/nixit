@@ -43,10 +43,10 @@ test.beforeAll(async () => {
   const idA = await resetUser(USER_A);
   const idB = await resetUser(USER_B);
 
-  await admin.from('users').insert([
-    { id: idA, email: USER_A.email, username: USER_A.username, active_cohort_id: cohortId },
-    { id: idB, email: USER_B.email, username: USER_B.username, active_cohort_id: cohortId },
-  ]);
+  // A DB trigger auto-creates the public.users row on signup, so update it
+  // rather than insert (which would conflict on the primary key).
+  await admin.from('users').update({ username: USER_A.username, active_cohort_id: cohortId }).eq('id', idA);
+  await admin.from('users').update({ username: USER_B.username, active_cohort_id: cohortId }).eq('id', idB);
 
   await admin.from('cohort_members').insert([
     { user_id: idA, cohort_id: cohortId },
@@ -96,7 +96,7 @@ test.describe('Cohort chat', () => {
 
     await test.step('user B sees the message live, attributed to user A', async () => {
       await expect(pageB.getByText(messageText)).toBeVisible();
-      await expect(pageB.getByText(USER_A.username)).toBeVisible();
+      await expect(pageB.getByText(USER_A.username, { exact: true })).toBeVisible();
     });
 
     await contextA.close();
