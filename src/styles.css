@@ -212,6 +212,12 @@ img, video { max-width: 100%; height: auto; }
   --color-info-surface:    var(--lavender-50);
   --color-info-border:     var(--lavender-200);
 
+  /* Presence status — literal, non-brand (go/caution/stop semantics) */
+  --status-online:  #22C55E;
+  --status-away:    #F59E0B;
+  --status-offline: var(--neutral-300);
+  --status-dnd:     #DC2626;
+
   /* Dark purple convenience aliases */
   --color-purple:          var(--purple-600);
   --color-purple-deep:     var(--purple-700);
@@ -360,6 +366,12 @@ img, video { max-width: 100%; height: auto; }
   --color-info:             var(--lavender-300);
   --color-info-surface:     rgba(122, 98, 245, 0.14);
   --color-info-border:      rgba(150, 126, 255, 0.24);
+
+  /* Presence status — literal, non-brand (go/caution/stop semantics) */
+  --status-online:  #4ADE80;
+  --status-away:    #FBBF24;
+  --status-offline: var(--neutral-600);
+  --status-dnd:     #F87171;
 
   /* Tinted decorative surfaces */
   --tint-lavender:          rgba(122, 98, 245, 0.16);
