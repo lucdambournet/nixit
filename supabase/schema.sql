@@ -97,3 +97,8 @@ create table if not exists chat_messages (
 
 create index if not exists idx_chat_messages_cohort_created
   on chat_messages(cohort_id, created_at);
+
+-- Online status: manual Do Not Disturb override. Online/away/offline are
+-- derived live from presence and never persisted.
+alter table public.users
+  add column if not exists dnd boolean not null default false;
