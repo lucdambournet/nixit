@@ -62,7 +62,7 @@ export function Input({ label, error, hint, prefix, suffix, type = 'text', disab
             color: 'var(--color-text)',
             background: 'transparent', border: 'none', outline: 'none',
             padding: 'var(--padding-input)',
-            paddingLeft: prefix ? '8px' : undefined,
+            paddingLeft: prefix ? '13px' : 'calc(var(--padding-input-x) + 5px)',
             paddingRight: suffix ? '8px' : undefined,
             width: '100%',
             ...inputStyle,
