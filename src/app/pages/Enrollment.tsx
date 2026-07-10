@@ -1,10 +1,22 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useNavigate } from 'react-router-dom';
 import { NixDateCard } from '../components/nix/NixDateCard';
 import { Toast } from '../components/ui/Toast';
 import { Button } from '../components/ui/Button';
 import { Logo } from '../components/ui/Logo';
+
+const ICON_STROKE = { strokeWidth: '2', strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const };
+const ChevronLeftIcon = ({ n = 18 }) => (
+  <svg width={n} height={n} viewBox="0 0 24 24" fill="none" stroke="currentColor" {...ICON_STROKE}>
+    <polyline points="15 18 9 12 15 6" />
+  </svg>
+);
+const ChevronRightIcon = ({ n = 18 }) => (
+  <svg width={n} height={n} viewBox="0 0 24 24" fill="none" stroke="currentColor" {...ICON_STROKE}>
+    <polyline points="9 18 15 12 9 6" />
+  </svg>
+);
 
 type Cohort = {
   id: string;
@@ -25,6 +37,15 @@ function Enrollment() {
   const [joining, setJoining] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [toast, setToast] = useState<{ type: 'success' | 'error'; msg: string } | null>(null);
+  const trackRef = useRef<HTMLDivElement>(null);
+
+  const scrollByCard = (dir: -1 | 1) => {
+    const track = trackRef.current;
+    if (!track) return;
+    const card = track.querySelector<HTMLElement>('[data-carousel-card]');
+    const step = card ? card.offsetWidth + 14 : track.clientWidth * 0.8;
+    track.scrollBy({ left: dir * step, behavior: 'smooth' });
+  };
 
   useEffect(() => {
     const loadCohorts = async () => {
@@ -143,26 +164,62 @@ function Enrollment() {
             </p>
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-            {cohorts.map(cohort => {
-              const { month, year } = parseDateCard(cohort);
-              const isFull = cohort.member_count >= cohort.max_members;
-              const cardStatus = isFull ? 'full' : (cohort.status as 'upcoming' | 'active');
-              return (
-                <NixDateCard
-                  key={cohort.id}
-                  month={month}
-                  year={year}
-                  joined={cohort.member_count}
-                  total={cohort.max_members}
-                  status={cardStatus}
-                  isJoined={false}
-                  onJoin={() => {
-                    if (!joining) handleJoin(cohort.id, `${new Date(0, month - 1).toLocaleString('default', { month: 'long' })} ${year}`);
+          <div style={{ position: 'relative' }}>
+            <div
+              ref={trackRef}
+              className="nixit-carousel"
+              style={{ display: 'flex', gap: 14, overflowX: 'auto', scrollSnapType: 'x mandatory', padding: '4px 4px 12px', margin: '-4px -4px 0' }}
+            >
+              {cohorts.map(cohort => {
+                const { month, year } = parseDateCard(cohort);
+                const isFull = cohort.member_count >= cohort.max_members;
+                const cardStatus = isFull ? 'full' : (cohort.status as 'upcoming' | 'active');
+                return (
+                  <div key={cohort.id} data-carousel-card style={{ flex: '0 0 300px', scrollSnapAlign: 'start' }}>
+                    <NixDateCard
+                      month={month}
+                      year={year}
+                      joined={cohort.member_count}
+                      total={cohort.max_members}
+                      status={cardStatus}
+                      isJoined={false}
+                      onJoin={() => {
+                        if (!joining) handleJoin(cohort.id, `${new Date(0, month - 1).toLocaleString('default', { month: 'long' })} ${year}`);
+                      }}
+                    />
+                  </div>
+                );
+              })}
+            </div>
+
+            {cohorts.length > 1 && (
+              <>
+                <button
+                  aria-label="Scroll to previous cohort"
+                  onClick={() => scrollByCard(-1)}
+                  style={{
+                    position: 'absolute', top: '50%', left: -8, transform: 'translateY(-50%)',
+                    width: 34, height: 34, borderRadius: '50%', border: '1px solid var(--color-border-subtle)',
+                    background: 'var(--surface-card)', color: 'var(--color-text-secondary)', boxShadow: 'var(--shadow-sm)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
                   }}
-                />
-              );
-            })}
+                >
+                  <ChevronLeftIcon n={16} />
+                </button>
+                <button
+                  aria-label="Scroll to next cohort"
+                  onClick={() => scrollByCard(1)}
+                  style={{
+                    position: 'absolute', top: '50%', right: -8, transform: 'translateY(-50%)',
+                    width: 34, height: 34, borderRadius: '50%', border: '1px solid var(--color-border-subtle)',
+                    background: 'var(--surface-card)', color: 'var(--color-text-secondary)', boxShadow: 'var(--shadow-sm)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+                  }}
+                >
+                  <ChevronRightIcon n={16} />
+                </button>
+              </>
+            )}
           </div>
         )}
 
