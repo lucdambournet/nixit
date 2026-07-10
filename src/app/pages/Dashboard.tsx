@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { SideNav } from '../components/navigation/SideNav';
 import { CohortTimer } from '../components/nix/CohortTimer';
 import { NixDateCard } from '../components/nix/NixDateCard';
+import { DailyCheckInCard } from '../components/nix/DailyCheckInCard';
 import { Avatar } from '../components/ui/Avatar';
 import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
@@ -13,6 +14,7 @@ import { Toast } from '../components/ui/Toast';
 import { Logo } from '../components/ui/Logo';
 import { ProfileScreen } from '../../components/profile/ProfileScreen';
 import { mapMessageRow, shouldShowAuthorName, type ChatMessageRow, type DisplayMessage } from '../lib/chatMessages';
+import { hasCheckedInToday, todayISODate } from '../lib/dailyCheckIn';
 
 /* ── Inline SVG Icons ── */
 const S = { strokeWidth: '2', strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const };
@@ -55,7 +57,7 @@ const UserIcon = ({ n = 18 }) => (
 /* ── Types ── */
 type Page = 'home' | 'chat' | 'dates' | 'profile';
 type CohortData = { id: string; start_date: string; member_count: number; max_members: number; status: string; nix_date: { month: string; start_date: string } };
-type UserData = { id: string; username: string; email: string; created_at: string; profile_image_url: string | null; active_cohort: CohortData | null };
+type UserData = { id: string; username: string; email: string; created_at: string; profile_image_url: string | null; active_cohort: CohortData | null; current_streak: number; longest_streak: number; last_check_in_date: string | null };
 type Member = { user: { id: string; username: string; profile_image_url: string | null } };
 type UpcomingCohort = { id: string; member_count: number; max_members: number; status: string; start_date: string; nix_date: { month: string; start_date: string } };
 
@@ -70,7 +72,25 @@ function formatChatError(message: string) {
 }
 
 /* ── Home Screen ── */
-function HomeScreen({ user, cohort, members, onGoToChat, onTapOut }: { user: UserData; cohort: CohortData; members: Member[]; onGoToChat: () => void; onTapOut: () => void }) {
+function HomeScreen({ user, cohort, members, onGoToChat, onTapOut, onCheckInSuccess }: { user: UserData; cohort: CohortData; members: Member[]; onGoToChat: () => void; onTapOut: () => void; onCheckInSuccess: (patch: Pick<UserData, 'current_streak' | 'longest_streak' | 'last_check_in_date'>) => void }) {
+  const [isCheckingIn, setIsCheckingIn] = useState(false);
+  const [checkInToast, setCheckInToast] = useState<{ type: 'success' | 'error'; msg: string } | null>(null);
+
+  const handleCheckIn = async () => {
+    setIsCheckingIn(true);
+    const { data, error } = await supabase.rpc('record_check_in').single();
+    setIsCheckingIn(false);
+
+    if (error) {
+      setCheckInToast({ type: 'error', msg: error.message === 'Already checked in today' ? "You're already checked in for today." : `Check-in failed: ${error.message}` });
+      return;
+    }
+
+    const result = data as { current_streak: number; longest_streak: number; check_in_date: string };
+    onCheckInSuccess({ current_streak: result.current_streak, longest_streak: result.longest_streak, last_check_in_date: result.check_in_date });
+    setCheckInToast({ type: 'success', msg: `Checked in! Streak: ${result.current_streak} day${result.current_streak === 1 ? '' : 's'}.` });
+  };
+
   const startDate = cohort.nix_date?.start_date ?? cohort.start_date;
   const now = Date.now();
   const start = new Date(startDate).getTime();
@@ -88,6 +108,11 @@ function HomeScreen({ user, cohort, members, onGoToChat, onTapOut }: { user: Use
 
   return (
     <div style={{ padding: '32px 40px 64px', maxWidth: 760, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 22 }}>
+      {checkInToast && (
+        <div style={{ position: 'fixed', bottom: 88, left: '50%', transform: 'translateX(-50%)', zIndex: 100 }}>
+          <Toast type={checkInToast.type} message={checkInToast.msg} visible onClose={() => setCheckInToast(null)} />
+        </div>
+      )}
       <div>
         <div style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)', letterSpacing: 'var(--tracking-widest)', textTransform: 'uppercase', marginBottom: 6 }}>
           {dayName}, {dateStr}
@@ -119,6 +144,15 @@ function HomeScreen({ user, cohort, members, onGoToChat, onTapOut }: { user: Use
           </div>
         ))}
       </div>
+
+      {/* Daily Check-In */}
+      <DailyCheckInCard
+        currentStreak={user.current_streak}
+        longestStreak={user.longest_streak}
+        alreadyCheckedInToday={hasCheckedInToday({ lastCheckInDate: user.last_check_in_date }, todayISODate())}
+        isCheckingIn={isCheckingIn}
+        onCheckIn={handleCheckIn}
+      />
 
       {/* Cohort members */}
       {members.length > 0 && (
@@ -484,7 +518,7 @@ function Dashboard() {
 
       const { data, error } = await supabase
         .from('users')
-        .select('username, email, created_at, profile_image_url, active_cohort:active_cohort_id(id, start_date, member_count, max_members, status, nix_date:nix_date_id(month, start_date))')
+        .select('username, email, created_at, profile_image_url, current_streak, longest_streak, last_check_in_date, active_cohort:active_cohort_id(id, start_date, member_count, max_members, status, nix_date:nix_date_id(month, start_date))')
         .eq('id', user.id)
         .single();
 
@@ -586,6 +620,7 @@ function Dashboard() {
               if (error) { alert(error.message); return; }
               navigate('/enrollment');
             }}
+            onCheckInSuccess={patch => setUserData(u => (u ? { ...u, ...patch } : u))}
           />
         )}
         {page === 'chat' && (
