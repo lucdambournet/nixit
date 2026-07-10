@@ -65,6 +65,13 @@ export function Avatar({ src, name, size = 'md', status, onStatusClick, style }:
           aria-label={onStatusClick ? 'Open status menu' : `${name ?? 'User'} status: ${status}`}
           data-status={status}
           onClick={onStatusClick ? (e: React.MouseEvent) => { e.stopPropagation(); onStatusClick(e); } : undefined}
+          onKeyDown={onStatusClick ? (e: React.KeyboardEvent) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              e.stopPropagation();
+              onStatusClick(e as unknown as React.MouseEvent);
+            }
+          } : undefined}
           style={{
             position: 'absolute',
             bottom: px > 36 ? 2 : 1, right: px > 36 ? 2 : 1,
