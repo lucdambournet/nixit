@@ -26,6 +26,16 @@ const ChatIcon = ({ n = 18 }) => (
     <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
   </svg>
 );
+const ChevronLeftIcon = ({ n = 18 }) => (
+  <svg width={n} height={n} viewBox="0 0 24 24" fill="none" stroke="currentColor" {...S}>
+    <polyline points="15 18 9 12 15 6" />
+  </svg>
+);
+const ChevronRightIcon = ({ n = 18 }) => (
+  <svg width={n} height={n} viewBox="0 0 24 24" fill="none" stroke="currentColor" {...S}>
+    <polyline points="9 18 15 12 9 6" />
+  </svg>
+);
 const CalIcon = ({ n = 18 }) => (
   <svg width={n} height={n} viewBox="0 0 24 24" fill="none" stroke="currentColor" {...S}>
     <rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" />
@@ -335,6 +345,15 @@ function DatesScreen({ activeCohortStart }: { activeCohortStart: string }) {
   const [cohorts, setCohorts] = useState<UpcomingCohort[]>([]);
   const [toast, setToast] = useState<{ type: 'success' | 'error'; msg: string } | null>(null);
   const navigate = useNavigate();
+  const trackRef = useRef<HTMLDivElement>(null);
+
+  const scrollByCard = (dir: -1 | 1) => {
+    const track = trackRef.current;
+    if (!track) return;
+    const card = track.querySelector<HTMLElement>('[data-carousel-card]');
+    const step = card ? card.offsetWidth + 16 : track.clientWidth * 0.8;
+    track.scrollBy({ left: dir * step, behavior: 'smooth' });
+  };
 
   useEffect(() => {
     supabase
@@ -375,34 +394,71 @@ function DatesScreen({ activeCohortStart }: { activeCohortStart: string }) {
         You can only be in one cohort at a time. Tap Out of your current cohort to join a future one.
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-        {cohorts.map(c => {
-          const { month, year } = parseDateCard(c);
-          const isActive = month === activeMonth && year === activeYear;
-          const isFull = c.member_count >= c.max_members;
-          const cardStatus = isActive ? 'active' : isFull ? 'full' : 'upcoming';
-          return (
-            <NixDateCard
-              key={c.id}
-              month={month}
-              year={year}
-              joined={c.member_count}
-              total={c.max_members}
-              status={cardStatus}
-              isJoined={isActive}
-              onJoin={() => {
-                setToast({ type: 'default' as unknown as 'error', msg: 'Tap Out of your current cohort first.' });
-                setTimeout(() => setToast(null), 4000);
-              }}
-            />
-          );
-        })}
-        {cohorts.length === 0 && (
-          <div style={{ textAlign: 'center', padding: '40px', color: 'var(--color-text-muted)', fontFamily: 'var(--font-body)' }}>
-            No upcoming cohorts yet.
+      {cohorts.length === 0 ? (
+        <div style={{ textAlign: 'center', padding: '40px', color: 'var(--color-text-muted)', fontFamily: 'var(--font-body)' }}>
+          No upcoming cohorts yet.
+        </div>
+      ) : (
+        <div style={{ position: 'relative' }}>
+          <div
+            ref={trackRef}
+            className="nixit-carousel"
+            style={{ display: 'flex', gap: 16, overflowX: 'auto', scrollSnapType: 'x mandatory', padding: '4px 4px 12px', margin: '-4px -4px 0' }}
+          >
+            {cohorts.map(c => {
+              const { month, year } = parseDateCard(c);
+              const isActive = month === activeMonth && year === activeYear;
+              const isFull = c.member_count >= c.max_members;
+              const cardStatus = isActive ? 'active' : isFull ? 'full' : 'upcoming';
+              return (
+                <div key={c.id} data-carousel-card style={{ flex: '0 0 300px', scrollSnapAlign: 'start' }}>
+                  <NixDateCard
+                    month={month}
+                    year={year}
+                    joined={c.member_count}
+                    total={c.max_members}
+                    status={cardStatus}
+                    isJoined={isActive}
+                    onJoin={() => {
+                      setToast({ type: 'default' as unknown as 'error', msg: 'Tap Out of your current cohort first.' });
+                      setTimeout(() => setToast(null), 4000);
+                    }}
+                  />
+                </div>
+              );
+            })}
           </div>
-        )}
-      </div>
+
+          {cohorts.length > 1 && (
+            <>
+              <button
+                aria-label="Scroll to previous cohort"
+                onClick={() => scrollByCard(-1)}
+                style={{
+                  position: 'absolute', top: '50%', left: -8, transform: 'translateY(-50%)',
+                  width: 34, height: 34, borderRadius: '50%', border: '1px solid var(--color-border-subtle)',
+                  background: 'var(--surface-card)', color: 'var(--color-text-secondary)', boxShadow: 'var(--shadow-sm)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+                }}
+              >
+                <ChevronLeftIcon n={16} />
+              </button>
+              <button
+                aria-label="Scroll to next cohort"
+                onClick={() => scrollByCard(1)}
+                style={{
+                  position: 'absolute', top: '50%', right: -8, transform: 'translateY(-50%)',
+                  width: 34, height: 34, borderRadius: '50%', border: '1px solid var(--color-border-subtle)',
+                  background: 'var(--surface-card)', color: 'var(--color-text-secondary)', boxShadow: 'var(--shadow-sm)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+                }}
+              >
+                <ChevronRightIcon n={16} />
+              </button>
+            </>
+          )}
+        </div>
+      )}
 
       <div style={{ textAlign: 'center' }}>
         <Button variant="ghost" size="sm" onClick={() => navigate('/enrollment')}>Browse all cohorts</Button>

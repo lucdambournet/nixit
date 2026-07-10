@@ -473,3 +473,7 @@ img, video { max-width: 100%; height: auto; }
 /* ── Scrollbar ── */
 ::-webkit-scrollbar { width: 5px; }
 ::-webkit-scrollbar-thumb { background: var(--neutral-200); border-radius: 99px; }
+
+/* ── Nix Date carousel — horizontal scroll, no visible scrollbar ── */
+.nixit-carousel { scrollbar-width: none; -ms-overflow-style: none; }
+.nixit-carousel::-webkit-scrollbar { display: none; }
