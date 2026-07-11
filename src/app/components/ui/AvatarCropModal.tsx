@@ -20,12 +20,13 @@ export function AvatarCropModal({ src, onCancel, onSave }: AvatarCropModalProps)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
+        if (saving) return;
         onCancel();
       }
     };
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [onCancel]);
+  }, [onCancel, saving]);
 
   const handleSave = async () => {
     if (!croppedAreaPixels) return;
