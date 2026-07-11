@@ -653,9 +653,11 @@ function Dashboard() {
               profile_image_url: userData.profile_image_url,
               created_at: userData.created_at,
               cohortLabel: cohort.nix_date?.month ?? null,
+              dnd: userData.dnd,
             }}
             onUserUpdate={(patch: Partial<Pick<UserData, 'username' | 'profile_image_url'>>) => setUserData(u => (u ? { ...u, ...patch } : u))}
             onSignOut={() => supabase.auth.signOut().then(() => navigate('/login'))}
+            onToggleDnd={toggleDnd}
           />
         )}
       </main>

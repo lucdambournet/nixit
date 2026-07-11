@@ -62,15 +62,17 @@ interface ProfileUser {
   profile_image_url: string | null;
   created_at: string;
   cohortLabel?: string | null;
+  dnd: boolean;
 }
 
 interface ProfileScreenProps {
   user: ProfileUser;
   onUserUpdate: (patch: Partial<Pick<ProfileUser, 'username' | 'profile_image_url'>>) => void;
   onSignOut: () => void;
+  onToggleDnd: (next: boolean) => Promise<boolean>;
 }
 
-export function ProfileScreen({ user, onUserUpdate, onSignOut }: ProfileScreenProps) {
+export function ProfileScreen({ user, onUserUpdate, onSignOut, onToggleDnd }: ProfileScreenProps) {
   const fileRef = useRef<HTMLInputElement>(null);
 
   const [username, setUsername] = useState(user.username);
@@ -207,6 +209,27 @@ export function ProfileScreen({ user, onUserUpdate, onSignOut }: ProfileScreenPr
               </Button>
             </div>
           </div>
+        </div>
+      </Card>
+
+      {/* ── Status ── */}
+      <Card variant="default" padding="lg">
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
+          <div>
+            <div style={{ fontFamily: 'var(--font-body)', fontWeight: 600, fontSize: 'var(--text-base)', color: 'var(--color-text)' }}>
+              Do Not Disturb
+            </div>
+            <div style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)', lineHeight: 'var(--leading-snug)', marginTop: 2 }}>
+              Shows a red status to your cohort regardless of whether you're actually online. Online, away, and offline are detected automatically and can't be set manually.
+            </div>
+          </div>
+          <Switch
+            checked={user.dnd}
+            onChange={async v => {
+              const ok = await onToggleDnd(v);
+              if (!ok) flash('error', 'Could not update your status. Try again.');
+            }}
+          />
         </div>
       </Card>
 
