@@ -19,6 +19,7 @@ async function resetUser(): Promise<string> {
   const existing = users.find(entry => entry.email === USER.email);
 
   if (existing) {
+    await admin.from('cohort_members').delete().eq('user_id', existing.id);
     await admin.from('users').delete().eq('id', existing.id);
     await admin.auth.admin.deleteUser(existing.id);
   }
@@ -33,19 +34,33 @@ async function resetUser(): Promise<string> {
 }
 
 let userId: string;
+let cohortId: string;
 
 test.beforeAll(async () => {
+  const { data: cohort } = await admin.from('cohorts').select('id').eq('start_date', '2026-11-01').single();
+  cohortId = cohort!.id;
+
   userId = await resetUser();
-  await admin.from('users').insert([{ id: userId, email: USER.email, username: USER.username, profile_image_url: null }]);
+
+  await admin.from('cohort_members').delete().eq('user_id', userId);
+  await admin.from('users').delete().eq('id', userId);
+
+  await admin.from('users').insert([{ id: userId, email: USER.email, username: USER.username, profile_image_url: null, active_cohort_id: cohortId }]);
+  await admin.from('cohort_members').insert([{ user_id: userId, cohort_id: cohortId }]);
 });
 
 test.afterAll(async () => {
+  await admin.from('cohort_members').delete().eq('user_id', userId);
   await admin.from('users').delete().eq('id', userId);
   await admin.auth.admin.deleteUser(userId);
 });
 
 test.describe('Avatar crop upload', () => {
   test.beforeEach(async ({ page }) => {
+    // Ensure each test starts from a photo-less profile, regardless of what a
+    // prior test in this file uploaded (uploads now persist for real).
+    await admin.from('users').update({ profile_image_url: null }).eq('id', userId);
+
     await page.goto('/login');
     await page.getByLabel('Email').fill(USER.email);
     await page.getByLabel('Password').fill(USER.password);
@@ -55,8 +70,8 @@ test.describe('Avatar crop upload', () => {
   });
 
   test('picking a photo opens the crop modal; Save uploads and updates the avatar', async ({ page }) => {
-    const avatarImgBefore = page.locator('img[alt="avatar_crop_tester"]');
-    await expect(avatarImgBefore).toHaveCount(0); // no photo yet → initials shown, no <img>
+    const profileCardAvatar = page.getByRole('main').getByRole('img', { name: USER.username });
+    await expect(profileCardAvatar).toHaveCount(0); // no photo yet → initials shown, no <img>
 
     await page.locator('input[type="file"]').setInputFiles(FIXTURE);
 
@@ -67,7 +82,7 @@ test.describe('Avatar crop upload', () => {
     await expect(dialog).toHaveCount(0);
 
     await expect(page.getByText('Profile photo updated.')).toBeVisible();
-    await expect(page.locator('img[alt="avatar_crop_tester"]')).toBeVisible();
+    await expect(profileCardAvatar).toBeVisible();
   });
 
   test('Cancel closes the crop modal without uploading', async ({ page }) => {
@@ -80,6 +95,6 @@ test.describe('Avatar crop upload', () => {
     await expect(dialog).toHaveCount(0);
 
     await expect(page.getByText('Profile photo updated.')).toHaveCount(0);
-    await expect(page.locator('img[alt="avatar_crop_tester"]')).toHaveCount(0);
+    await expect(page.getByRole('main').getByRole('img', { name: USER.username })).toHaveCount(0);
   });
 });
