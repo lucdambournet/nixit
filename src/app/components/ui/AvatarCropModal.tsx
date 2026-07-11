@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Cropper, { type Area } from 'react-easy-crop';
 import { Button } from './Button';
 import { Card } from './Card';
@@ -15,13 +15,27 @@ export function AvatarCropModal({ src, onCancel, onSave }: AvatarCropModalProps)
   const [zoom, setZoom] = useState(1);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onCancel();
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [onCancel]);
 
   const handleSave = async () => {
     if (!croppedAreaPixels) return;
     setSaving(true);
+    setError(null);
     try {
       const blob = await cropImageToBlob(src, croppedAreaPixels);
       onSave(blob);
+    } catch {
+      setError('Could not crop this photo. Please try again.');
     } finally {
       setSaving(false);
     }
@@ -30,6 +44,7 @@ export function AvatarCropModal({ src, onCancel, onSave }: AvatarCropModalProps)
   return (
     <div
       role="dialog"
+      aria-modal="true"
       aria-label="Crop profile photo"
       style={{
         position: 'fixed', inset: 0, zIndex: 200,
@@ -66,6 +81,16 @@ export function AvatarCropModal({ src, onCancel, onSave }: AvatarCropModalProps)
           onChange={e => setZoom(Number(e.target.value))}
           style={{ width: '100%' }}
         />
+
+        {error && (
+          <span style={{
+            fontFamily: 'var(--font-body)', fontSize: 'var(--text-xs)',
+            color: 'var(--color-danger)',
+            lineHeight: 'var(--leading-snug)',
+          }}>
+            {error}
+          </span>
+        )}
 
         <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
           <Button variant="outline" size="sm" onClick={onCancel} disabled={saving}>
