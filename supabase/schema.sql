@@ -102,3 +102,6 @@ create index if not exists idx_chat_messages_cohort_created
 -- derived live from presence and never persisted.
 alter table public.users
   add column if not exists dnd boolean not null default false;
+
+-- Broadcast dnd changes to cohort mates in real time.
+alter publication supabase_realtime add table public.users;

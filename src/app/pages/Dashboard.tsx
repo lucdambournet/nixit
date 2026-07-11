@@ -542,6 +542,26 @@ function Dashboard() {
     presenceChannelRef.current?.track({ active: isActive });
   }, [isActive]);
 
+  useEffect(() => {
+    if (!cohortId) return;
+
+    const channel = supabase
+      .channel(`users-dnd-cohort-${cohortId}`)
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'users', filter: `active_cohort_id=eq.${cohortId}` },
+        payload => {
+          const { id, dnd } = payload.new as { id: string; dnd: boolean };
+          setMembers(current => current.map(m => (m.user?.id === id ? { ...m, user: { ...m.user, dnd } } : m)));
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [cohortId]);
+
   const toggleDnd = async (next: boolean): Promise<boolean> => {
     if (!userData) return false;
     const prev = userData.dnd;

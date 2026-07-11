@@ -16,7 +16,7 @@
 - `users.dnd` is a plain boolean (not an enum) — there is no other manual state to represent.
 - No new npm dependencies. No new test infra (no jsdom/RTL) — keep DOM-touching hook logic thin and put all testable logic in plain, DOM-free functions, matching the existing `tests/unit/chat-messages.test.ts` style.
 - Single quotes, no semicolon-first style changes — match existing file conventions exactly (see `Avatar.tsx`, `Dashboard.tsx`).
-- A cohort-mate toggling their own DND is only reflected for other members after they reload (their `dnd` value comes from the one-time `members` fetch, same as username/avatar today — no new `postgres_changes` subscription for this, consistent with existing non-live member-profile updates). This is a known, accepted limitation, not a bug to fix here.
+- ~~A cohort-mate toggling their own DND is only reflected for other members after they reload...~~ **Revised during Task 10:** the e2e test requires DND to propagate live (a red dot going stale mid-chat is confusing), so `Dashboard` now also subscribes to `postgres_changes` UPDATE on `public.users` (filtered by `active_cohort_id`) and patches the matching member's `dnd` in state. `public.users` was added to the `supabase_realtime` publication (`supabase/schema.sql`) to make this fire.
 
 ---
 
@@ -28,7 +28,7 @@
 **Interfaces:**
 - Produces: a `dnd boolean not null default false` column on `public.users`, readable/writable under the existing "users can read own row" / "users can update own row" RLS policies (no policy changes needed).
 
-- [ ] **Step 1: Append the column migration to schema.sql**
+- [x] **Step 1: Append the column migration to schema.sql**
 
 Add to the end of `supabase/schema.sql`:
 
@@ -40,7 +40,7 @@ alter table public.users
   add column if not exists dnd boolean not null default false;
 ```
 
-- [ ] **Step 2: Apply it to the live Supabase project**
+- [x] **Step 2: Apply it to the live Supabase project**
 
 This mutates the shared project schema — confirm with the user before running.
 Run the statement above via the Supabase Dashboard → SQL Editor (same flow used
@@ -60,7 +60,7 @@ where table_name = 'users' and column_name = 'dnd';
 
 Expected: one row — `dnd | boolean | false`.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add supabase/schema.sql
@@ -79,7 +79,7 @@ git commit -m "db: add users.dnd column for manual Do Not Disturb override"
 - Produces: `computeActive(hidden: boolean, lastInputAt: number, now: number, idleMs: number): boolean` (pure, DOM-free, unit-tested).
 - Produces: `useIsActive(idleMs?: number): boolean` (React hook — combines `document.hidden` + a rolling idle timer via `computeActive`; not unit-tested directly, since the repo has no jsdom/RTL — it's a thin wrapper, same convention as untested `useEffect`s in `Dashboard.tsx`).
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `tests/unit/activity.test.ts`:
 
@@ -108,12 +108,12 @@ describe('computeActive', () => {
 });
 ```
 
-- [ ] **Step 2: Run it to confirm it fails**
+- [x] **Step 2: Run it to confirm it fails**
 
 Run: `npm test -- tests/unit/activity.test.ts`
 Expected: FAIL — `Cannot find module '../../src/app/hooks/useIsActive'`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 Create `src/app/hooks/useIsActive.ts`:
 
@@ -158,12 +158,12 @@ export function useIsActive(idleMs: number = DEFAULT_IDLE_MS): boolean {
 }
 ```
 
-- [ ] **Step 4: Run the test to confirm it passes**
+- [x] **Step 4: Run the test to confirm it passes**
 
 Run: `npm test -- tests/unit/activity.test.ts`
 Expected: PASS (4 tests).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/app/hooks/useIsActive.ts tests/unit/activity.test.ts
@@ -185,7 +185,7 @@ git commit -m "feat: add tab-focus + idle-timer activity detection"
   — used by Task 8 (Dashboard) to compute every avatar's status, and by Task 4
   (`Avatar`) as the type for its `status` prop.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `tests/unit/presence.test.ts`:
 
@@ -216,12 +216,12 @@ describe('resolveStatus', () => {
 });
 ```
 
-- [ ] **Step 2: Run it to confirm it fails**
+- [x] **Step 2: Run it to confirm it fails**
 
 Run: `npm test -- tests/unit/presence.test.ts`
 Expected: FAIL — `Cannot find module '../../src/app/lib/presence'`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 Create `src/app/lib/presence.ts`:
 
@@ -239,12 +239,12 @@ export function resolveStatus(userId: string, dnd: boolean, presence: Map<string
 }
 ```
 
-- [ ] **Step 4: Run the test to confirm it passes**
+- [x] **Step 4: Run the test to confirm it passes**
 
 Run: `npm test -- tests/unit/presence.test.ts`
 Expected: PASS (5 tests).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/app/lib/presence.ts tests/unit/presence.test.ts
@@ -266,7 +266,7 @@ git commit -m "feat: add resolveStatus for combining presence with manual dnd"
   focusable, clickable element that calls `stopPropagation()` before invoking it.
   Task 5 (`StatusPopover`) relies on this prop existing.
 
-- [ ] **Step 1: Add status color tokens to styles.css**
+- [x] **Step 1: Add status color tokens to styles.css**
 
 In `src/styles.css`, inside `:root { ... }` right after the existing status
 section (after `--color-info-border: var(--lavender-200);` around line 213), add:
@@ -291,7 +291,7 @@ In the `[data-theme="dark"]` block, right after the existing
   --status-dnd:     #F87171;
 ```
 
-- [ ] **Step 2: Rewrite Avatar.tsx**
+- [x] **Step 2: Rewrite Avatar.tsx**
 
 Replace the full contents of `src/app/components/ui/Avatar.tsx`:
 
@@ -380,7 +380,7 @@ export function Avatar({ src, name, size = 'md', status, onStatusClick, style }:
 }
 ```
 
-- [ ] **Step 3: Verify it compiles and existing tests still pass**
+- [x] **Step 3: Verify it compiles and existing tests still pass**
 
 Run: `npx tsc --noEmit`
 Expected: no errors (no other file references the old `'busy'` status value —
@@ -390,7 +390,7 @@ Run: `npm test`
 Expected: PASS — unaffected (`chat-messages.test.ts`, `auth-join.test.ts`, plus
 Tasks 2/3's new tests).
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/app/components/ui/Avatar.tsx src/styles.css
@@ -411,7 +411,7 @@ git commit -m "feat: Avatar supports 4 literal status colors + clickable dot"
   rendered. `onToggleDnd: (next: boolean) => void`. Task 8 uses this in the
   chat input bar and the side-nav footer.
 
-- [ ] **Step 1: Implement**
+- [x] **Step 1: Implement**
 
 Create `src/app/components/ui/StatusPopover.tsx`:
 
@@ -501,12 +501,12 @@ export function StatusPopover({ src, name, size = 'sm', status, dnd, onToggleDnd
 }
 ```
 
-- [ ] **Step 2: Verify it compiles**
+- [x] **Step 2: Verify it compiles**
 
 Run: `npx tsc --noEmit`
 Expected: no errors.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/app/components/ui/StatusPopover.tsx
@@ -527,7 +527,7 @@ git commit -m "feat: add StatusPopover, the DND-only control for your own avatar
 - Produces: `UserData.dnd: boolean` and `Member.user.dnd: boolean`, which
   Task 7/8 read to compute each avatar's resolved status.
 
-- [ ] **Step 1: Extend the types**
+- [x] **Step 1: Extend the types**
 
 In `src/app/pages/Dashboard.tsx`, change line 58 from:
 
@@ -553,7 +553,7 @@ to:
 type Member = { user: { id: string; username: string; profile_image_url: string | null; dnd: boolean } };
 ```
 
-- [ ] **Step 2: Extend the two Supabase selects**
+- [x] **Step 2: Extend the two Supabase selects**
 
 Change line 487 from:
 
@@ -579,7 +579,7 @@ to:
         .select('user:user_id(id, username, profile_image_url, dnd)')
 ```
 
-- [ ] **Step 3: Verify**
+- [x] **Step 3: Verify**
 
 Run: `npx tsc --noEmit`
 Expected: errors at every call site still using the old `Member`/`UserData`
@@ -592,7 +592,7 @@ Expected: PASS — these are TypeScript-only changes, no runtime behavior
 changed yet, and the affected unit tests (`chat-messages`, `auth-join`) don't
 touch these types.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/app/pages/Dashboard.tsx
@@ -613,7 +613,7 @@ git commit -m "refactor: carry users.dnd through UserData/Member types and queri
   - `selfStatus: ResolvedStatus` — the signed-in user's own resolved status.
   - `toggleDnd(next: boolean): Promise<boolean>` — writes `users.dnd`, optimistic with rollback on failure, returns whether it succeeded.
 
-- [ ] **Step 1: Add the new imports**
+- [x] **Step 1: Add the new imports**
 
 At the top of `src/app/pages/Dashboard.tsx`, after the existing `import { Toast } ...` line (line 12), add:
 
@@ -623,7 +623,7 @@ import { useIsActive } from '../hooks/useIsActive';
 import { resolveStatus, type ResolvedStatus } from '../lib/presence';
 ```
 
-- [ ] **Step 2: Add presence state, the channel effect, and `toggleDnd`**
+- [x] **Step 2: Add presence state, the channel effect, and `toggleDnd`**
 
 In `Dashboard()`, immediately after the existing data-load `useEffect` (right
 after the closing `}, [navigate]);` that follows the `load()` call, currently
@@ -678,7 +678,7 @@ at line 507), insert:
   };
 ```
 
-- [ ] **Step 3: Compute `selfStatus` and wire the side-nav avatar**
+- [x] **Step 3: Compute `selfStatus` and wire the side-nav avatar**
 
 Immediately after the existing line `const cohort = userData.active_cohort;`
 (line 541), add:
@@ -699,7 +699,7 @@ to:
           userAvatar={<StatusPopover src={userData.profile_image_url} name={userData.username} size="sm" status={selfStatus} dnd={userData.dnd} onToggleDnd={toggleDnd} />}
 ```
 
-- [ ] **Step 4: Pass the new data down to `HomeScreen` and `ChatScreen`**
+- [x] **Step 4: Pass the new data down to `HomeScreen` and `ChatScreen`**
 
 Change the `HomeScreen` invocation (starting at line 578) from:
 
@@ -736,14 +736,14 @@ to:
           <ChatScreen user={userData} cohort={cohort} members={members} presence={presence} selfStatus={selfStatus} onToggleDnd={toggleDnd} />
 ```
 
-- [ ] **Step 5: Verify it compiles**
+- [x] **Step 5: Verify it compiles**
 
 Run: `npx tsc --noEmit`
 Expected: remaining errors only inside `HomeScreen`/`ChatScreen` function
 bodies (they don't accept these new props yet — fixed in Task 8) and inside
 `ProfileScreen`'s invocation (fixed in Task 9). No errors anywhere else.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/app/pages/Dashboard.tsx
@@ -760,7 +760,7 @@ git commit -m "feat: join a per-cohort presence channel and wire the side-nav DN
 **Interfaces:**
 - Consumes: `presence`, `selfStatus`, `onToggleDnd` from Task 7; `resolveStatus` from Task 3; `StatusPopover` from Task 5.
 
-- [ ] **Step 1: `HomeScreen` accepts `presence` and resolves member status**
+- [x] **Step 1: `HomeScreen` accepts `presence` and resolves member status**
 
 Change the `HomeScreen` signature (line 73) from:
 
@@ -786,7 +786,7 @@ to:
                 <Avatar src={m.user.profile_image_url} name={m.user.username} size="md" status={resolveStatus(m.user.id, m.user.dnd, presence)} />
 ```
 
-- [ ] **Step 2: `ChatScreen` accepts `presence`/`selfStatus`/`onToggleDnd`**
+- [x] **Step 2: `ChatScreen` accepts `presence`/`selfStatus`/`onToggleDnd`**
 
 Change the `ChatScreen` signature (line 166) from:
 
@@ -800,7 +800,7 @@ to:
 function ChatScreen({ user, cohort, members, presence, selfStatus, onToggleDnd }: { user: UserData; cohort: CohortData; members: Member[]; presence: Map<string, boolean>; selfStatus: ResolvedStatus; onToggleDnd: (next: boolean) => Promise<boolean> }) {
 ```
 
-- [ ] **Step 3: Resolve status for the header mini-avatars**
+- [x] **Step 3: Resolve status for the header mini-avatars**
 
 Change line 277 from:
 
@@ -814,7 +814,7 @@ to:
                 <Avatar src={m.user.profile_image_url} name={m.user.username} size="sm" status={resolveStatus(m.user.id, m.user.dnd, presence)} />
 ```
 
-- [ ] **Step 4: Resolve status for the message-list author avatar**
+- [x] **Step 4: Resolve status for the message-list author avatar**
 
 Change line 303 from:
 
@@ -828,7 +828,7 @@ to:
                   <Avatar name={msg.from} size="xs" status={msg.isMe ? selfStatus : resolveStatus(msg.authorId, resolveAuthor(msg.authorId)?.dnd ?? false, presence)} />
 ```
 
-- [ ] **Step 5: Replace the input-bar self avatar with `StatusPopover`**
+- [x] **Step 5: Replace the input-bar self avatar with `StatusPopover`**
 
 Change line 327 from:
 
@@ -842,7 +842,7 @@ to:
         <StatusPopover src={user.profile_image_url} name={user.username} size="sm" status={selfStatus} dnd={user.dnd} onToggleDnd={onToggleDnd} />
 ```
 
-- [ ] **Step 6: Verify**
+- [x] **Step 6: Verify**
 
 Run: `npx tsc --noEmit`
 Expected: no errors except inside the `ProfileScreen` call site (Task 9 fixes it).
@@ -860,7 +860,7 @@ Run: `npm run dev -- --port 5174` and manually check in a browser:
 - Check both light and dark (toggle OS theme or `prefers-color-scheme`) — the
   dot colors switch (`#22C55E`/`#4ADE80`, `#DC2626`/`#F87171`).
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/app/pages/Dashboard.tsx
@@ -878,7 +878,7 @@ git commit -m "feat: render resolved status dots in Home and Chat screens"
 **Interfaces:**
 - Consumes: `toggleDnd` from Task 7 (passed through as `onToggleDnd`), existing `Switch` component already defined in this file.
 
-- [ ] **Step 1: Extend the interfaces**
+- [x] **Step 1: Extend the interfaces**
 
 In `src/components/profile/ProfileScreen.tsx`, change `ProfileUser` (line 59-65) from:
 
@@ -926,7 +926,7 @@ interface ProfileScreenProps {
 }
 ```
 
-- [ ] **Step 2: Accept the new prop**
+- [x] **Step 2: Accept the new prop**
 
 Change line 73 from:
 
@@ -940,7 +940,7 @@ to:
 export function ProfileScreen({ user, onUserUpdate, onSignOut, onToggleDnd }: ProfileScreenProps) {
 ```
 
-- [ ] **Step 3: Add the Status card**
+- [x] **Step 3: Add the Status card**
 
 Insert a new card right after the Identity header card's closing `</Card>`
 (line 211) and before the `{/* ── Account details ── */}` comment (line 213):
@@ -969,7 +969,7 @@ Insert a new card right after the Identity header card's closing `</Card>`
       </Card>
 ```
 
-- [ ] **Step 4: Pass `dnd` and `onToggleDnd` from `Dashboard`**
+- [x] **Step 4: Pass `dnd` and `onToggleDnd` from `Dashboard`**
 
 In `src/app/pages/Dashboard.tsx`, change the `ProfileScreen` invocation
 (lines 597-608) from:
@@ -1006,7 +1006,7 @@ to:
           />
 ```
 
-- [ ] **Step 5: Verify**
+- [x] **Step 5: Verify**
 
 Run: `npx tsc --noEmit`
 Expected: zero errors anywhere in the project now.
@@ -1018,7 +1018,7 @@ Run the dev server and manually confirm: toggling the switch on the Profile
 page flips your side-nav avatar dot between green and red immediately, and
 the change survives a page reload (reads back from `users.dnd`).
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/components/profile/ProfileScreen.tsx src/app/pages/Dashboard.tsx
@@ -1035,7 +1035,7 @@ git commit -m "feat: add Do Not Disturb toggle to the Profile screen"
 **Interfaces:**
 - Consumes: the running app from Tasks 1-9; no new production code.
 
-- [ ] **Step 1: Write the test**
+- [x] **Step 1: Write the test**
 
 Create `tests/e2e/status-indicators.spec.ts`:
 
@@ -1166,7 +1166,7 @@ test.describe('Online status indicators', () => {
 });
 ```
 
-- [ ] **Step 2: Run it**
+- [x] **Step 2: Run it**
 
 Run: `npm run test:e2e -- tests/e2e/status-indicators.spec.ts`
 
@@ -1177,7 +1177,7 @@ live project in this session.
 
 Expected: PASS (1 test, 7 steps).
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add tests/e2e/status-indicators.spec.ts
