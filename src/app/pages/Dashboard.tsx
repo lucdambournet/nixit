@@ -73,7 +73,7 @@ function formatChatError(message: string) {
 }
 
 /* ── Home Screen ── */
-function HomeScreen({ user, cohort, members, onGoToChat, onTapOut }: { user: UserData; cohort: CohortData; members: Member[]; onGoToChat: () => void; onTapOut: () => void }) {
+function HomeScreen({ user, cohort, members, presence, onGoToChat, onTapOut }: { user: UserData; cohort: CohortData; members: Member[]; presence: Map<string, boolean>; onGoToChat: () => void; onTapOut: () => void }) {
   const startDate = cohort.nix_date?.start_date ?? cohort.start_date;
   const now = Date.now();
   const start = new Date(startDate).getTime();
@@ -133,7 +133,7 @@ function HomeScreen({ user, cohort, members, onGoToChat, onTapOut }: { user: Use
           <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
             {members.filter(m => m.user).map((m, i) => (
               <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-                <Avatar src={m.user.profile_image_url} name={m.user.username} size="md" status="online" />
+                <Avatar src={m.user.profile_image_url} name={m.user.username} size="md" status={resolveStatus(m.user.id, m.user.dnd, presence)} />
                 <span style={{ fontFamily: 'var(--font-body)', fontSize: 10, color: 'var(--color-text-muted)' }}>{m.user.username}</span>
               </div>
             ))}
@@ -166,7 +166,7 @@ function HomeScreen({ user, cohort, members, onGoToChat, onTapOut }: { user: Use
 }
 
 /* ── Chat Screen ── */
-function ChatScreen({ user, cohort, members }: { user: UserData; cohort: CohortData; members: Member[] }) {
+function ChatScreen({ user, cohort, members, presence, selfStatus, onToggleDnd }: { user: UserData; cohort: CohortData; members: Member[]; presence: Map<string, boolean>; selfStatus: ResolvedStatus; onToggleDnd: (next: boolean) => Promise<boolean> }) {
   const cohortLabel = cohort.nix_date?.month ?? 'Your Cohort';
   const [msgs, setMsgs] = useState<DisplayMessage[]>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -277,7 +277,7 @@ function ChatScreen({ user, cohort, members }: { user: UserData; cohort: CohortD
           <div style={{ display: 'flex' }}>
             {members.slice(0, 5).map((m, i) => (
               <div key={i} style={{ marginLeft: i ? -8 : 0 }}>
-                <Avatar src={m.user.profile_image_url} name={m.user.username} size="sm" />
+                <Avatar src={m.user.profile_image_url} name={m.user.username} size="sm" status={resolveStatus(m.user.id, m.user.dnd, presence)} />
               </div>
             ))}
             {cohort.member_count > 5 && (
@@ -303,7 +303,7 @@ function ChatScreen({ user, cohort, members }: { user: UserData; cohort: CohortD
             <div key={msg.id} style={{ display: 'flex', flexDirection: 'column', alignItems: msg.isMe ? 'flex-end' : 'flex-start', marginBottom: 8 }}>
               {showName && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4, marginLeft: 2 }}>
-                  <Avatar name={msg.from} size="xs" />
+                  <Avatar name={msg.from} size="xs" status={msg.isMe ? selfStatus : resolveStatus(msg.authorId, resolveAuthor(msg.authorId)?.dnd ?? false, presence)} />
                   <span style={{ fontFamily: 'var(--font-body)', fontWeight: 600, fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)' }}>{msg.from}</span>
                 </div>
               )}
@@ -327,7 +327,7 @@ function ChatScreen({ user, cohort, members }: { user: UserData; cohort: CohortD
 
       {/* Input bar */}
       <div style={{ padding: '14px 24px', borderTop: '1px solid var(--color-border-subtle)', display: 'flex', gap: 10, alignItems: 'center', background: 'white', flexShrink: 0 }}>
-        <Avatar src={user.profile_image_url} name={user.username} size="sm" status="online" />
+        <StatusPopover src={user.profile_image_url} name={user.username} size="sm" status={selfStatus} dnd={user.dnd} onToggleDnd={onToggleDnd} />
         <div style={{ flex: 1 }}>
           <Input
             placeholder="Share how you're doing…"
