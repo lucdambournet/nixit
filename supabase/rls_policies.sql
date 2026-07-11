@@ -97,3 +97,25 @@ create policy "cohort members can send messages as themselves"
   );
 
 alter publication supabase_realtime add table public.chat_messages;
+
+-- ── daily_check_ins: users can read only their own check-in history ──
+-- All writes go through record_check_in() (security definer) — no insert/
+-- update/delete grant to authenticated, mirroring join_cohort's pattern.
+alter table public.daily_check_ins enable row level security;
+
+drop policy if exists "users can read own check-ins" on public.daily_check_ins;
+create policy "users can read own check-ins"
+  on public.daily_check_ins for select
+  to authenticated
+  using ((select auth.uid()) = user_id);
+
+grant select on table public.daily_check_ins to authenticated;
+
+-- ── users: block direct client writes to streak columns ──
+-- Defense in depth: column-level grants, not the row-level "users can update
+-- own row" policy, are what stop an authenticated client from calling
+-- `update users set current_streak = ...` directly. record_check_in() is
+-- security definer, so it bypasses grants (runs as the function owner) and
+-- is unaffected by this revoke.
+revoke update on public.users from authenticated;
+grant update (username, profile_image_url) on public.users to authenticated;
