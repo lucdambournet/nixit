@@ -55,8 +55,8 @@ const UserIcon = ({ n = 18 }) => (
 /* ── Types ── */
 type Page = 'home' | 'chat' | 'dates' | 'profile';
 type CohortData = { id: string; start_date: string; member_count: number; max_members: number; status: string; nix_date: { month: string; start_date: string } };
-type UserData = { id: string; username: string; email: string; created_at: string; profile_image_url: string | null; active_cohort: CohortData | null };
-type Member = { user: { id: string; username: string; profile_image_url: string | null } };
+type UserData = { id: string; username: string; email: string; created_at: string; profile_image_url: string | null; dnd: boolean; active_cohort: CohortData | null };
+type Member = { user: { id: string; username: string; profile_image_url: string | null; dnd: boolean } };
 type UpcomingCohort = { id: string; member_count: number; max_members: number; status: string; start_date: string; nix_date: { month: string; start_date: string } };
 
 const CHAT_SCHEMA_CACHE_ERROR = "Could not find the table 'public.chat_messages' in the schema cache";
@@ -484,7 +484,7 @@ function Dashboard() {
 
       const { data, error } = await supabase
         .from('users')
-        .select('username, email, created_at, profile_image_url, active_cohort:active_cohort_id(id, start_date, member_count, max_members, status, nix_date:nix_date_id(month, start_date))')
+        .select('username, email, created_at, profile_image_url, dnd, active_cohort:active_cohort_id(id, start_date, member_count, max_members, status, nix_date:nix_date_id(month, start_date))')
         .eq('id', user.id)
         .single();
 
@@ -496,7 +496,7 @@ function Dashboard() {
       const cohort = data.active_cohort as unknown as CohortData;
       const { data: membersData } = await supabase
         .from('cohort_members')
-        .select('user:user_id(id, username, profile_image_url)')
+        .select('user:user_id(id, username, profile_image_url, dnd)')
         .eq('cohort_id', cohort.id)
         .limit(20);
 
