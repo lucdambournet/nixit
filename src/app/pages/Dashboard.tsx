@@ -11,6 +11,9 @@ import { Card } from '../components/ui/Card';
 import { Input } from '../components/ui/Input';
 import { Toast } from '../components/ui/Toast';
 import { Logo } from '../components/ui/Logo';
+import { StatusPopover } from '../components/ui/StatusPopover';
+import { useIsActive } from '../hooks/useIsActive';
+import { resolveStatus, type ResolvedStatus } from '../lib/presence';
 import { ProfileScreen } from '../../components/profile/ProfileScreen';
 import { mapMessageRow, shouldShowAuthorName, type ChatMessageRow, type DisplayMessage } from '../lib/chatMessages';
 
@@ -506,6 +509,52 @@ function Dashboard() {
     load();
   }, [navigate]);
 
+  const isActive = useIsActive();
+  const [presence, setPresence] = useState<Map<string, boolean>>(new Map());
+  const presenceChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+  const cohortId = userData?.active_cohort?.id;
+
+  useEffect(() => {
+    if (!cohortId || !userData) return;
+
+    const channel = supabase.channel(`presence:cohort-${cohortId}`, {
+      config: { presence: { key: userData.id } },
+    });
+    presenceChannelRef.current = channel;
+
+    channel
+      .on('presence', { event: 'sync' }, () => {
+        const state = channel.presenceState<{ active: boolean }>();
+        setPresence(new Map(Object.entries(state).map(([id, entries]) => [id, entries[0]?.active ?? false])));
+      })
+      .subscribe(subscribeStatus => {
+        if (subscribeStatus === 'SUBSCRIBED') channel.track({ active: isActive });
+      });
+
+    return () => {
+      supabase.removeChannel(channel);
+      presenceChannelRef.current = null;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cohortId, userData?.id]);
+
+  useEffect(() => {
+    presenceChannelRef.current?.track({ active: isActive });
+  }, [isActive]);
+
+  const toggleDnd = async (next: boolean): Promise<boolean> => {
+    if (!userData) return false;
+    const prev = userData.dnd;
+    setUserData(u => (u ? { ...u, dnd: next } : u));
+
+    const { error: dndError } = await supabase.from('users').update({ dnd: next }).eq('id', userData.id);
+    if (dndError) {
+      setUserData(u => (u ? { ...u, dnd: prev } : u));
+      return false;
+    }
+    return true;
+  };
+
   const NAV = [
     { id: 'home',    label: 'Home',      icon: <HomeIcon /> },
     { id: 'chat',    label: 'Chat',      icon: <ChatIcon /> },
@@ -540,6 +589,7 @@ function Dashboard() {
 
   const cohort = userData.active_cohort;
   const startDate = cohort.nix_date?.start_date ?? cohort.start_date;
+  const selfStatus: ResolvedStatus = resolveStatus(userData.id, userData.dnd, presence);
 
   return (
     <div style={{ display: 'flex', height: '100vh', background: 'white', overflow: 'hidden', position: 'relative' }}>
@@ -563,7 +613,7 @@ function Dashboard() {
           collapsed={collapsed}
           onToggle={() => setCollapsed(c => !c)}
           logo={<SidebarLogo />}
-          userAvatar={<Avatar src={userData.profile_image_url} name={userData.username} size="sm" status="online" />}
+          userAvatar={<StatusPopover src={userData.profile_image_url} name={userData.username} size="sm" status={selfStatus} dnd={userData.dnd} onToggleDnd={toggleDnd} />}
           userName={userData.username}
           onUserClick={() => setPage('profile')}
           userActive={page === 'profile'}
@@ -579,6 +629,7 @@ function Dashboard() {
             user={userData}
             cohort={cohort}
             members={members}
+            presence={presence}
             onGoToChat={() => setPage('chat')}
             onTapOut={async () => {
               if (!confirm('Are you sure you want to tap out? This removes you from the cohort.')) return;
@@ -589,7 +640,7 @@ function Dashboard() {
           />
         )}
         {page === 'chat' && (
-          <ChatScreen user={userData} cohort={cohort} members={members} />
+          <ChatScreen user={userData} cohort={cohort} members={members} presence={presence} selfStatus={selfStatus} onToggleDnd={toggleDnd} />
         )}
         {page === 'dates' && (
           <DatesScreen activeCohortStart={startDate} />
