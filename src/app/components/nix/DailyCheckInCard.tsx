@@ -52,7 +52,7 @@ export function DailyCheckInCard({
           </span>
         </div>
       ) : (
-        <Button variant="primary" size="md" disabled={isCheckingIn} onClick={onCheckIn} style={{ width: '100%' }}>
+        <Button variant="solid" size="md" disabled={isCheckingIn} onClick={onCheckIn} style={{ width: '100%' }}>
           {isCheckingIn ? 'Checking in…' : "Check in for today"}
         </Button>
       )}
