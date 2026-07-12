@@ -23,7 +23,28 @@ with native-feeling capture on mobile, (3) Playwright e2e + unit test coverage.
 - Rotate/flip/filters — out of scope, avatar crop only.
 - Reusable app-wide `<Modal>` component — this builds a single-purpose overlay;
   extracting a generic modal is a separate concern.
-- Changing the storage bucket, RLS policies, or file naming scheme.
+- Changing the storage bucket. Avatars still live in the existing `avatars`
+  bucket.
+
+### Deviations from plan
+
+While implementing, two changes originally scoped as non-goals turned out to
+be necessary and were made deliberately, not by scope creep:
+
+- **File naming scheme.** The avatar path changed from `${uid}.${ext}` to a
+  fixed `${uid}.jpg`, because `cropImageToBlob` always produces a JPEG
+  (512×512, quality 0.9) regardless of the source file's format — keeping the
+  original extension would mismatch the actual content type and could leave
+  stale files in other extensions behind. See
+  `src/components/profile/ProfileScreen.tsx`, `handleCropSave`.
+- **RLS policies.** A new `storage.objects` SELECT policy ("Anyone can view
+  avatars") was added (`supabase/rls_policies.sql`, ~line 110). This was a
+  pre-existing bug unrelated to the crop feature itself: uploads were
+  completely broken in production because Supabase's storage API issues an
+  internal `INSERT ... RETURNING`, which requires a SELECT policy to succeed
+  — none existed before. It was discovered while validating this feature and
+  fixed in the same branch since avatar uploads couldn't otherwise be
+  end-to-end tested.
 
 ## Architecture
 
