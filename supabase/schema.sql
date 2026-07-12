@@ -105,3 +105,78 @@ alter table public.users
 
 -- Broadcast dnd changes to cohort mates in real time.
 alter publication supabase_realtime add table public.users;
+
+-- Daily check-ins: one row per user per calendar day they checked in.
+-- Streak counters are denormalized onto `users` so the Dashboard can read
+-- them without recomputing consecutive-day runs from full history on every load.
+alter table users
+  add column if not exists current_streak int not null default 0,
+  add column if not exists longest_streak int not null default 0,
+  add column if not exists last_check_in_date date;
+
+create table if not exists daily_check_ins (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references users(id) on delete cascade,
+  check_in_date date not null,
+  created_at timestamptz not null default now(),
+  unique (user_id, check_in_date)
+);
+
+create index if not exists idx_daily_check_ins_user_date
+  on daily_check_ins(user_id, check_in_date desc);
+
+-- record_check_in uses auth.uid() so the caller cannot impersonate another
+-- user or backdate a check-in; streak math is server-only (never trust the client).
+create or replace function record_check_in()
+  returns table (current_streak int, longest_streak int, check_in_date date)
+  language plpgsql security definer as $$
+declare
+  requesting_user_id uuid := auth.uid();
+  today date := current_date;
+  prev_date date;
+  prev_streak int;
+  prev_longest int;
+  new_streak int;
+  new_longest int;
+begin
+  if requesting_user_id is null then
+    raise exception 'Not authenticated';
+  end if;
+
+  select users.last_check_in_date, users.current_streak, users.longest_streak
+    into prev_date, prev_streak, prev_longest
+    from users
+    where id = requesting_user_id and active_cohort_id is not null;
+
+  if not found then
+    raise exception 'No active cohort';
+  end if;
+
+  if prev_date = today then
+    raise exception 'Already checked in today';
+  end if;
+
+  if prev_date = today - 1 then
+    new_streak := prev_streak + 1;
+  else
+    new_streak := 1;
+  end if;
+  new_longest := greatest(prev_longest, new_streak);
+
+  begin
+    insert into daily_check_ins (user_id, check_in_date)
+    values (requesting_user_id, today);
+  exception when unique_violation then
+    -- Lost a same-day race against another concurrent check-in request.
+    raise exception 'Already checked in today';
+  end;
+
+  update users
+  set current_streak = new_streak,
+      longest_streak = new_longest,
+      last_check_in_date = today
+  where id = requesting_user_id;
+
+  return query select new_streak, new_longest, today;
+end;
+$$;

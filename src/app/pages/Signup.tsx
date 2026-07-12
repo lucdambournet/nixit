@@ -56,7 +56,7 @@ function Signup() {
       // User must confirm email then log in; avatar can be set later
       setLoading(false);
       setError(null);
-      navigate('/login', { state: { notice: 'Check your email to confirm your account, then sign in.' } });
+      navigate('/login', { state: { notice: 'Check your email to confirm your account, then sign in.', showEmailLink: true } });
     }
   };
 
