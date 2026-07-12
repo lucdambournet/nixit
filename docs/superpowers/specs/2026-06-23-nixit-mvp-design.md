@@ -36,7 +36,9 @@ Deliver a first release that lets users:
 
 - Full onboarding survey
 - Advanced user analytics
-- Gamification or streak rewards beyond cohort timer
+- Gamification (credits/XP/levels) — daily check-in streak tracking shipped, see
+  `docs/superpowers/specs/2026-07-10-daily-checkin-design.md` (Issue #64); an economy layer on top
+  remains deferred
 - Multi-channel notification settings beyond push and in-app alerts
 
 ## Core User Flows

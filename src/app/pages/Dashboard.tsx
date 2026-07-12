@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { SideNav } from '../components/navigation/SideNav';
 import { CohortTimer } from '../components/nix/CohortTimer';
 import { NixDateCard } from '../components/nix/NixDateCard';
+import { DailyCheckInCard } from '../components/nix/DailyCheckInCard';
 import { Avatar } from '../components/ui/Avatar';
 import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
@@ -11,8 +12,12 @@ import { Card } from '../components/ui/Card';
 import { Input } from '../components/ui/Input';
 import { Toast } from '../components/ui/Toast';
 import { Logo } from '../components/ui/Logo';
+import { StatusPopover } from '../components/ui/StatusPopover';
+import { useIsActive } from '../hooks/useIsActive';
+import { resolveStatus, type ResolvedStatus } from '../lib/presence';
 import { ProfileScreen } from '../../components/profile/ProfileScreen';
 import { mapMessageRow, shouldShowAuthorName, type ChatMessageRow, type DisplayMessage } from '../lib/chatMessages';
+import { hasCheckedInToday, todayISODate } from '../lib/dailyCheckIn';
 
 /* ── Inline SVG Icons ── */
 const S = { strokeWidth: '2', strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const };
@@ -55,8 +60,8 @@ const UserIcon = ({ n = 18 }) => (
 /* ── Types ── */
 type Page = 'home' | 'chat' | 'dates' | 'profile';
 type CohortData = { id: string; start_date: string; member_count: number; max_members: number; status: string; nix_date: { month: string; start_date: string } };
-type UserData = { id: string; username: string; email: string; created_at: string; profile_image_url: string | null; active_cohort: CohortData | null };
-type Member = { user: { id: string; username: string; profile_image_url: string | null } };
+type UserData = { id: string; username: string; email: string; created_at: string; profile_image_url: string | null; dnd: boolean; active_cohort: CohortData | null; current_streak: number; longest_streak: number; last_check_in_date: string | null };
+type Member = { user: { id: string; username: string; profile_image_url: string | null; dnd: boolean } };
 type UpcomingCohort = { id: string; member_count: number; max_members: number; status: string; start_date: string; nix_date: { month: string; start_date: string } };
 
 const CHAT_SCHEMA_CACHE_ERROR = "Could not find the table 'public.chat_messages' in the schema cache";
@@ -70,7 +75,25 @@ function formatChatError(message: string) {
 }
 
 /* ── Home Screen ── */
-function HomeScreen({ user, cohort, members, onGoToChat, onTapOut }: { user: UserData; cohort: CohortData; members: Member[]; onGoToChat: () => void; onTapOut: () => void }) {
+function HomeScreen({ user, cohort, members, presence, onGoToChat, onTapOut, onCheckInSuccess }: { user: UserData; cohort: CohortData; members: Member[]; presence: Map<string, boolean>; onGoToChat: () => void; onTapOut: () => void; onCheckInSuccess: (patch: Pick<UserData, 'current_streak' | 'longest_streak' | 'last_check_in_date'>) => void }) {
+  const [isCheckingIn, setIsCheckingIn] = useState(false);
+  const [checkInToast, setCheckInToast] = useState<{ type: 'success' | 'error'; msg: string } | null>(null);
+
+  const handleCheckIn = async () => {
+    setIsCheckingIn(true);
+    const { data, error } = await supabase.rpc('record_check_in').single();
+    setIsCheckingIn(false);
+
+    if (error) {
+      setCheckInToast({ type: 'error', msg: error.message === 'Already checked in today' ? "You're already checked in for today." : `Check-in failed: ${error.message}` });
+      return;
+    }
+
+    const result = data as { current_streak: number; longest_streak: number; check_in_date: string };
+    onCheckInSuccess({ current_streak: result.current_streak, longest_streak: result.longest_streak, last_check_in_date: result.check_in_date });
+    setCheckInToast({ type: 'success', msg: `Checked in! Streak: ${result.current_streak} day${result.current_streak === 1 ? '' : 's'}.` });
+  };
+
   const startDate = cohort.nix_date?.start_date ?? cohort.start_date;
   const now = Date.now();
   const start = new Date(startDate).getTime();
@@ -88,6 +111,11 @@ function HomeScreen({ user, cohort, members, onGoToChat, onTapOut }: { user: Use
 
   return (
     <div style={{ padding: '32px 40px 64px', maxWidth: 760, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 22 }}>
+      {checkInToast && (
+        <div style={{ position: 'fixed', bottom: 88, left: '50%', transform: 'translateX(-50%)', zIndex: 100 }}>
+          <Toast type={checkInToast.type} message={checkInToast.msg} visible onClose={() => setCheckInToast(null)} />
+        </div>
+      )}
       <div>
         <div style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)', letterSpacing: 'var(--tracking-widest)', textTransform: 'uppercase', marginBottom: 6 }}>
           {dayName}, {dateStr}
@@ -120,6 +148,15 @@ function HomeScreen({ user, cohort, members, onGoToChat, onTapOut }: { user: Use
         ))}
       </div>
 
+      {/* Daily Check-In */}
+      <DailyCheckInCard
+        currentStreak={user.current_streak}
+        longestStreak={user.longest_streak}
+        alreadyCheckedInToday={hasCheckedInToday({ lastCheckInDate: user.last_check_in_date }, todayISODate())}
+        isCheckingIn={isCheckingIn}
+        onCheckIn={handleCheckIn}
+      />
+
       {/* Cohort members */}
       {members.length > 0 && (
         <Card variant="default" padding="md">
@@ -130,7 +167,7 @@ function HomeScreen({ user, cohort, members, onGoToChat, onTapOut }: { user: Use
           <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
             {members.filter(m => m.user).map((m, i) => (
               <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-                <Avatar src={m.user.profile_image_url} name={m.user.username} size="md" status="online" />
+                <Avatar src={m.user.profile_image_url} name={m.user.username} size="md" status={resolveStatus(m.user.id, m.user.dnd, presence)} />
                 <span style={{ fontFamily: 'var(--font-body)', fontSize: 10, color: 'var(--color-text-muted)' }}>{m.user.username}</span>
               </div>
             ))}
@@ -163,7 +200,7 @@ function HomeScreen({ user, cohort, members, onGoToChat, onTapOut }: { user: Use
 }
 
 /* ── Chat Screen ── */
-function ChatScreen({ user, cohort, members }: { user: UserData; cohort: CohortData; members: Member[] }) {
+function ChatScreen({ user, cohort, members, presence, selfStatus, onToggleDnd }: { user: UserData; cohort: CohortData; members: Member[]; presence: Map<string, boolean>; selfStatus: ResolvedStatus; onToggleDnd: (next: boolean) => Promise<boolean> }) {
   const cohortLabel = cohort.nix_date?.month ?? 'Your Cohort';
   const [msgs, setMsgs] = useState<DisplayMessage[]>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -274,7 +311,7 @@ function ChatScreen({ user, cohort, members }: { user: UserData; cohort: CohortD
           <div style={{ display: 'flex' }}>
             {members.slice(0, 5).map((m, i) => (
               <div key={i} style={{ marginLeft: i ? -8 : 0 }}>
-                <Avatar src={m.user.profile_image_url} name={m.user.username} size="sm" />
+                <Avatar src={m.user.profile_image_url} name={m.user.username} size="sm" status={resolveStatus(m.user.id, m.user.dnd, presence)} />
               </div>
             ))}
             {cohort.member_count > 5 && (
@@ -300,7 +337,7 @@ function ChatScreen({ user, cohort, members }: { user: UserData; cohort: CohortD
             <div key={msg.id} style={{ display: 'flex', flexDirection: 'column', alignItems: msg.isMe ? 'flex-end' : 'flex-start', marginBottom: 8 }}>
               {showName && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4, marginLeft: 2 }}>
-                  <Avatar name={msg.from} size="xs" />
+                  <Avatar name={msg.from} size="xs" status={msg.isMe ? selfStatus : resolveStatus(msg.authorId, resolveAuthor(msg.authorId)?.dnd ?? false, presence)} />
                   <span style={{ fontFamily: 'var(--font-body)', fontWeight: 600, fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)' }}>{msg.from}</span>
                 </div>
               )}
@@ -324,7 +361,7 @@ function ChatScreen({ user, cohort, members }: { user: UserData; cohort: CohortD
 
       {/* Input bar */}
       <div style={{ padding: '14px 24px', borderTop: '1px solid var(--color-border-subtle)', display: 'flex', gap: 10, alignItems: 'center', background: 'white', flexShrink: 0 }}>
-        <Avatar src={user.profile_image_url} name={user.username} size="sm" status="online" />
+        <StatusPopover src={user.profile_image_url} name={user.username} size="sm" status={selfStatus} dnd={user.dnd} onToggleDnd={onToggleDnd} />
         <div style={{ flex: 1 }}>
           <Input
             placeholder="Share how you're doing…"
@@ -484,7 +521,7 @@ function Dashboard() {
 
       const { data, error } = await supabase
         .from('users')
-        .select('username, email, created_at, profile_image_url, active_cohort:active_cohort_id(id, start_date, member_count, max_members, status, nix_date:nix_date_id(month, start_date))')
+        .select('username, email, created_at, profile_image_url, dnd, current_streak, longest_streak, last_check_in_date, active_cohort:active_cohort_id(id, start_date, member_count, max_members, status, nix_date:nix_date_id(month, start_date))')
         .eq('id', user.id)
         .single();
 
@@ -496,7 +533,7 @@ function Dashboard() {
       const cohort = data.active_cohort as unknown as CohortData;
       const { data: membersData } = await supabase
         .from('cohort_members')
-        .select('user:user_id(id, username, profile_image_url)')
+        .select('user:user_id(id, username, profile_image_url, dnd)')
         .eq('cohort_id', cohort.id)
         .limit(20);
 
@@ -505,6 +542,72 @@ function Dashboard() {
     };
     load();
   }, [navigate]);
+
+  const isActive = useIsActive();
+  const [presence, setPresence] = useState<Map<string, boolean>>(new Map());
+  const presenceChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+  const cohortId = userData?.active_cohort?.id;
+
+  useEffect(() => {
+    if (!cohortId || !userData) return;
+
+    const channel = supabase.channel(`presence:cohort-${cohortId}`, {
+      config: { presence: { key: userData.id } },
+    });
+    presenceChannelRef.current = channel;
+
+    channel
+      .on('presence', { event: 'sync' }, () => {
+        const state = channel.presenceState<{ active: boolean }>();
+        setPresence(new Map(Object.entries(state).map(([id, entries]) => [id, entries[0]?.active ?? false])));
+      })
+      .subscribe(subscribeStatus => {
+        if (subscribeStatus === 'SUBSCRIBED') channel.track({ active: isActive });
+      });
+
+    return () => {
+      supabase.removeChannel(channel);
+      presenceChannelRef.current = null;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cohortId, userData?.id]);
+
+  useEffect(() => {
+    presenceChannelRef.current?.track({ active: isActive });
+  }, [isActive]);
+
+  useEffect(() => {
+    if (!cohortId) return;
+
+    const channel = supabase
+      .channel(`users-dnd-cohort-${cohortId}`)
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'users', filter: `active_cohort_id=eq.${cohortId}` },
+        payload => {
+          const { id, dnd } = payload.new as { id: string; dnd: boolean };
+          setMembers(current => current.map(m => (m.user?.id === id ? { ...m, user: { ...m.user, dnd } } : m)));
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [cohortId]);
+
+  const toggleDnd = async (next: boolean): Promise<boolean> => {
+    if (!userData) return false;
+    const prev = userData.dnd;
+    setUserData(u => (u ? { ...u, dnd: next } : u));
+
+    const { error: dndError } = await supabase.from('users').update({ dnd: next }).eq('id', userData.id);
+    if (dndError) {
+      setUserData(u => (u ? { ...u, dnd: prev } : u));
+      return false;
+    }
+    return true;
+  };
 
   const NAV = [
     { id: 'home',    label: 'Home',      icon: <HomeIcon /> },
@@ -540,6 +643,7 @@ function Dashboard() {
 
   const cohort = userData.active_cohort;
   const startDate = cohort.nix_date?.start_date ?? cohort.start_date;
+  const selfStatus: ResolvedStatus = resolveStatus(userData.id, userData.dnd, presence);
 
   return (
     <div style={{ display: 'flex', height: '100vh', background: 'white', overflow: 'hidden', position: 'relative' }}>
@@ -563,7 +667,7 @@ function Dashboard() {
           collapsed={collapsed}
           onToggle={() => setCollapsed(c => !c)}
           logo={<SidebarLogo />}
-          userAvatar={<Avatar src={userData.profile_image_url} name={userData.username} size="sm" status="online" />}
+          userAvatar={<StatusPopover src={userData.profile_image_url} name={userData.username} size="sm" status={selfStatus} dnd={userData.dnd} onToggleDnd={toggleDnd} />}
           userName={userData.username}
           onUserClick={() => setPage('profile')}
           userActive={page === 'profile'}
@@ -579,6 +683,7 @@ function Dashboard() {
             user={userData}
             cohort={cohort}
             members={members}
+            presence={presence}
             onGoToChat={() => setPage('chat')}
             onTapOut={async () => {
               if (!confirm('Are you sure you want to tap out? This removes you from the cohort.')) return;
@@ -586,10 +691,11 @@ function Dashboard() {
               if (error) { alert(error.message); return; }
               navigate('/enrollment');
             }}
+            onCheckInSuccess={patch => setUserData(u => (u ? { ...u, ...patch } : u))}
           />
         )}
         {page === 'chat' && (
-          <ChatScreen user={userData} cohort={cohort} members={members} />
+          <ChatScreen user={userData} cohort={cohort} members={members} presence={presence} selfStatus={selfStatus} onToggleDnd={toggleDnd} />
         )}
         {page === 'dates' && (
           <DatesScreen activeCohortStart={startDate} />
@@ -602,9 +708,11 @@ function Dashboard() {
               profile_image_url: userData.profile_image_url,
               created_at: userData.created_at,
               cohortLabel: cohort.nix_date?.month ?? null,
+              dnd: userData.dnd,
             }}
             onUserUpdate={(patch: Partial<Pick<UserData, 'username' | 'profile_image_url'>>) => setUserData(u => (u ? { ...u, ...patch } : u))}
             onSignOut={() => supabase.auth.signOut().then(() => navigate('/login'))}
+            onToggleDnd={toggleDnd}
           />
         )}
       </main>
