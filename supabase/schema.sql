@@ -98,6 +98,14 @@ create table if not exists chat_messages (
 create index if not exists idx_chat_messages_cohort_created
   on chat_messages(cohort_id, created_at);
 
+-- Online status: manual Do Not Disturb override. Online/away/offline are
+-- derived live from presence and never persisted.
+alter table public.users
+  add column if not exists dnd boolean not null default false;
+
+-- Broadcast dnd changes to cohort mates in real time.
+alter publication supabase_realtime add table public.users;
+
 -- Daily check-ins: one row per user per calendar day they checked in.
 -- Streak counters are denormalized onto `users` so the Dashboard can read
 -- them without recomputing consecutive-day runs from full history on every load.
