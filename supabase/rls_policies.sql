@@ -119,3 +119,21 @@ grant select on table public.daily_check_ins to authenticated;
 -- is unaffected by this revoke.
 revoke update on public.users from authenticated;
 grant update (username, profile_image_url) on public.users to authenticated;
+
+-- ── craving_sessions: personal only, no cohort scoping ─────────
+grant select, insert on table public.craving_sessions to authenticated;
+grant select, insert, update, delete on table public.craving_sessions to service_role;
+
+alter table public.craving_sessions enable row level security;
+
+drop policy if exists "users can read own craving sessions" on public.craving_sessions;
+create policy "users can read own craving sessions"
+  on public.craving_sessions for select
+  to authenticated
+  using ((select auth.uid()) = user_id);
+
+drop policy if exists "users can log own craving sessions" on public.craving_sessions;
+create policy "users can log own craving sessions"
+  on public.craving_sessions for insert
+  to authenticated
+  with check ((select auth.uid()) = user_id);
