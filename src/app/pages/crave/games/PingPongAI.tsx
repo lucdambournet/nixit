@@ -20,8 +20,14 @@ export function PingPongAI({ userId, onExit }: PingPongAIProps) {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowUp') playerYRef.current = Math.max(PADDLE_HEIGHT / 2, playerYRef.current - 20);
-      if (e.key === 'ArrowDown') playerYRef.current = Math.min(COURT_HEIGHT - PADDLE_HEIGHT / 2, playerYRef.current + 20);
+      if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        playerYRef.current = Math.max(PADDLE_HEIGHT / 2, playerYRef.current - 20);
+      }
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        playerYRef.current = Math.min(COURT_HEIGHT - PADDLE_HEIGHT / 2, playerYRef.current + 20);
+      }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
