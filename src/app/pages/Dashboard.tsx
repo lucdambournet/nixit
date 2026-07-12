@@ -16,6 +16,7 @@ import { StatusPopover } from '../components/ui/StatusPopover';
 import { useIsActive } from '../hooks/useIsActive';
 import { resolveStatus, type ResolvedStatus } from '../lib/presence';
 import { ProfileScreen } from '../../components/profile/ProfileScreen';
+import { CraveCrushers } from './crave/CraveCrushers';
 import { mapMessageRow, shouldShowAuthorName, type ChatMessageRow, type DisplayMessage } from '../lib/chatMessages';
 import { hasCheckedInToday, todayISODate } from '../lib/dailyCheckIn';
 
@@ -56,9 +57,14 @@ const UserIcon = ({ n = 18 }) => (
     <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" /><circle cx="12" cy="7" r="4" />
   </svg>
 );
+const CraveIcon = ({ n = 18 }) => (
+  <svg width={n} height={n} viewBox="0 0 24 24" fill="none" stroke="currentColor" {...S}>
+    <path d="M12 21c-4.5 0-7-2.5-7-6 0-3 2-4.5 2-7.5C7 5 9 3 9 3s1 3 3 3 3-3 3-3 2 2 2 4.5c0 3 2 4.5 2 7.5 0 3.5-2.5 6-7 6z" />
+  </svg>
+);
 
 /* ── Types ── */
-type Page = 'home' | 'chat' | 'dates' | 'profile';
+type Page = 'home' | 'chat' | 'dates' | 'profile' | 'crave';
 type CohortData = { id: string; start_date: string; member_count: number; max_members: number; status: string; nix_date: { month: string; start_date: string } };
 type UserData = { id: string; username: string; email: string; created_at: string; profile_image_url: string | null; dnd: boolean; active_cohort: CohortData | null; current_streak: number; longest_streak: number; last_check_in_date: string | null };
 type Member = { user: { id: string; username: string; profile_image_url: string | null; dnd: boolean } };
@@ -75,7 +81,7 @@ function formatChatError(message: string) {
 }
 
 /* ── Home Screen ── */
-function HomeScreen({ user, cohort, members, presence, onGoToChat, onTapOut, onCheckInSuccess }: { user: UserData; cohort: CohortData; members: Member[]; presence: Map<string, boolean>; onGoToChat: () => void; onTapOut: () => void; onCheckInSuccess: (patch: Pick<UserData, 'current_streak' | 'longest_streak' | 'last_check_in_date'>) => void }) {
+function HomeScreen({ user, cohort, members, presence, onGoToChat, onGoToCrave, onTapOut, onCheckInSuccess }: { user: UserData; cohort: CohortData; members: Member[]; presence: Map<string, boolean>; onGoToChat: () => void; onGoToCrave: () => void; onTapOut: () => void; onCheckInSuccess: (patch: Pick<UserData, 'current_streak' | 'longest_streak' | 'last_check_in_date'>) => void }) {
   const [isCheckingIn, setIsCheckingIn] = useState(false);
   const [checkInToast, setCheckInToast] = useState<{ type: 'success' | 'error'; msg: string } | null>(null);
 
@@ -156,6 +162,14 @@ function HomeScreen({ user, cohort, members, presence, onGoToChat, onTapOut, onC
         isCheckingIn={isCheckingIn}
         onCheckIn={handleCheckIn}
       />
+
+      {/* Crave SOS */}
+      <Card variant="purple" padding="md" style={{ textAlign: 'center' }}>
+        <p style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)', margin: '0 0 10px' }}>
+          Craving hitting hard right now?
+        </p>
+        <Button variant="purple" size="md" onClick={onGoToCrave}>Feeling a craving?</Button>
+      </Card>
 
       {/* Cohort members */}
       {members.length > 0 && (
@@ -612,6 +626,7 @@ function Dashboard() {
   const NAV = [
     { id: 'home',    label: 'Home',      icon: <HomeIcon /> },
     { id: 'chat',    label: 'Chat',      icon: <ChatIcon /> },
+    { id: 'crave',   label: 'Crave',     icon: <CraveIcon /> },
     { id: 'dates',   label: 'Nix Dates', icon: <CalIcon /> },
     { id: 'profile', label: 'Profile',   icon: <UserIcon /> },
   ];
@@ -685,6 +700,7 @@ function Dashboard() {
             members={members}
             presence={presence}
             onGoToChat={() => setPage('chat')}
+            onGoToCrave={() => setPage('crave')}
             onTapOut={async () => {
               if (!confirm('Are you sure you want to tap out? This removes you from the cohort.')) return;
               const { error } = await supabase.rpc('leave_cohort');
@@ -714,6 +730,9 @@ function Dashboard() {
             onSignOut={() => supabase.auth.signOut().then(() => navigate('/login'))}
             onToggleDnd={toggleDnd}
           />
+        )}
+        {page === 'crave' && (
+          <CraveCrushers userId={userData.id} />
         )}
       </main>
     </div>
