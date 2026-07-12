@@ -83,6 +83,13 @@ test.describe('Avatar crop upload', () => {
 
     await expect(page.getByText('Profile photo updated.')).toBeVisible();
     await expect(profileCardAvatar).toBeVisible();
+    // The <img> element renders regardless of whether its src 404s (fixed size
+    // placeholder), so also assert the browser actually decoded pixel data —
+    // this is what would have caught the missing storage.objects SELECT RLS
+    // policy that broke every avatar upload in production.
+    await expect.poll(() =>
+      profileCardAvatar.evaluate((img: HTMLImageElement) => img.naturalWidth)
+    ).toBeGreaterThan(0);
   });
 
   test('Cancel closes the crop modal without uploading', async ({ page }) => {
