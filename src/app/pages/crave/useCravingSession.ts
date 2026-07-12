@@ -42,7 +42,7 @@ export function useCravingSession(userId: string, gameType: GameType): { endSess
   const endSession = () => {
     const duration = computeDurationSeconds(startedAtMsRef.current, Date.now());
     void logCravingSession(
-      row => supabase.from('craving_sessions').insert(row),
+      async row => supabase.from('craving_sessions').insert(row),
       { user_id: userId, game_type: gameType, started_at: startedAtIsoRef.current, duration_seconds: duration }
     );
   };
