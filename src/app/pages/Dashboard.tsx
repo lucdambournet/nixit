@@ -14,7 +14,7 @@ import { Toast } from '../components/ui/Toast';
 import { Logo } from '../components/ui/Logo';
 import { StatusPopover } from '../components/ui/StatusPopover';
 import { useIsActive } from '../hooks/useIsActive';
-import { resolveStatus, type ResolvedStatus } from '../lib/presence';
+import { resolveStatus, sortByActivity, type ResolvedStatus } from '../lib/presence';
 import { ProfileScreen } from '../../components/profile/ProfileScreen';
 import { mapMessageRow, shouldShowAuthorName, type ChatMessageRow, type DisplayMessage } from '../lib/chatMessages';
 import { hasCheckedInToday, todayISODate } from '../lib/dailyCheckIn';
@@ -165,9 +165,18 @@ function HomeScreen({ user, cohort, members, presence, onGoToChat, onTapOut, onC
             <Badge variant="lavender" size="sm">{cohort.member_count} members</Badge>
           </div>
           <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-            {members.filter(m => m.user).map((m, i) => (
+            {sortByActivity(
+              members.filter(m => m.user).map(m => ({ m, status: resolveStatus(m.user.id, m.user.dnd, presence) })),
+              ({ status }) => status,
+            ).map(({ m, status }, i) => (
               <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-                <Avatar src={m.user.profile_image_url} name={m.user.username} size="md" status={resolveStatus(m.user.id, m.user.dnd, presence)} />
+                <Avatar
+                  src={m.user.profile_image_url}
+                  name={m.user.username}
+                  size="md"
+                  status={status}
+                  style={status === 'offline' ? { filter: 'grayscale(1)', opacity: 0.6 } : undefined}
+                />
                 <span style={{ fontFamily: 'var(--font-body)', fontSize: 10, color: 'var(--color-text-muted)' }}>{m.user.username}</span>
               </div>
             ))}
