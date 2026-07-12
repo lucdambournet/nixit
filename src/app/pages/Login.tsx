@@ -9,7 +9,7 @@ import { Logo } from '../components/ui/Logo';
 function Login() {
   const navigate = useNavigate();
   const location = useLocation();
-  const notice = (location.state as { notice?: string } | null)?.notice ?? null;
+  const { notice, showEmailLink } = (location.state as { notice?: string; showEmailLink?: boolean } | null) ?? {};
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -65,6 +65,17 @@ function Login() {
             fontWeight: 500,
           }}>
             {notice}
+            {showEmailLink && (
+              <>
+                {' '}
+                <a
+                  href="mailto:"
+                  style={{ color: '#1a6b3a', fontWeight: 'var(--weight-semibold)', textDecoration: 'underline' }}
+                >
+                  Open email app
+                </a>
+              </>
+            )}
           </div>
         )}
 

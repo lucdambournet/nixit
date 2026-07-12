@@ -1,13 +1,14 @@
 import React from 'react';
 
 type Size = 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
-type Status = 'online' | 'away' | 'busy' | 'offline';
+export type Status = 'online' | 'away' | 'offline' | 'dnd';
 
 interface AvatarProps {
   src?: string | null;
   name?: string;
   size?: Size;
   status?: Status;
+  onStatusClick?: (e: React.MouseEvent) => void;
   style?: React.CSSProperties;
 }
 
@@ -22,18 +23,19 @@ const BG_COLORS = [
 ];
 
 const STATUS_COLORS: Record<Status, string> = {
-  online:  'var(--lavender-500)',
-  away:    'var(--neutral-400)',
-  busy:    'var(--purple-500)',
-  offline: 'var(--neutral-300)',
+  online:  'var(--status-online)',
+  away:    'var(--status-away)',
+  offline: 'var(--status-offline)',
+  dnd:     'var(--status-dnd)',
 };
 
-export function Avatar({ src, name, size = 'md', status, style }: AvatarProps) {
+export function Avatar({ src, name, size = 'md', status, onStatusClick, style }: AvatarProps) {
   const px = SIZE_PX[size] ?? SIZE_PX.md;
   const initials = name
     ? name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
     : '?';
   const bg = name ? BG_COLORS[name.charCodeAt(0) % BG_COLORS.length] : BG_COLORS[0];
+  const dotSize = Math.max(8, Math.round(px * 0.26));
 
   return (
     <div style={{ position: 'relative', display: 'inline-flex', flexShrink: 0, ...style }}>
@@ -57,16 +59,30 @@ export function Avatar({ src, name, size = 'md', status, style }: AvatarProps) {
         </div>
       )}
       {status && (
-        <span style={{
-          position: 'absolute',
-          bottom: px > 36 ? 2 : 1, right: px > 36 ? 2 : 1,
-          width: Math.max(8, Math.round(px * 0.26)),
-          height: Math.max(8, Math.round(px * 0.26)),
-          borderRadius: 'var(--radius-full)',
-          background: STATUS_COLORS[status] ?? STATUS_COLORS.offline,
-          border: '2px solid var(--surface-card)',
-          display: 'block',
-        }} />
+        <span
+          role={onStatusClick ? 'button' : undefined}
+          tabIndex={onStatusClick ? 0 : undefined}
+          aria-label={onStatusClick ? 'Open status menu' : `${name ?? 'User'} status: ${status}`}
+          data-status={status}
+          onClick={onStatusClick ? (e: React.MouseEvent) => { e.stopPropagation(); onStatusClick(e); } : undefined}
+          onKeyDown={onStatusClick ? (e: React.KeyboardEvent) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              e.stopPropagation();
+              onStatusClick(e as unknown as React.MouseEvent);
+            }
+          } : undefined}
+          style={{
+            position: 'absolute',
+            bottom: px > 36 ? 2 : 1, right: px > 36 ? 2 : 1,
+            width: dotSize, height: dotSize,
+            borderRadius: 'var(--radius-full)',
+            background: STATUS_COLORS[status] ?? STATUS_COLORS.offline,
+            border: '2px solid var(--surface-card)',
+            display: 'block',
+            cursor: onStatusClick ? 'pointer' : undefined,
+          }}
+        />
       )}
     </div>
   );
