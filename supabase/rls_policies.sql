@@ -98,6 +98,20 @@ create policy "cohort members can send messages as themselves"
 
 alter publication supabase_realtime add table public.chat_messages;
 
+-- ── storage.objects (avatars bucket): public read ─────────────
+-- Applied 2026-07-11 while debugging issue #61 (avatar crop upload).
+-- storage.objects already had INSERT/UPDATE policies scoping each user to
+-- their own `{uid}.ext` path, but no SELECT policy existed. Supabase's
+-- storage API issues an INSERT ... RETURNING internally, which requires the
+-- inserted row to satisfy a SELECT policy — with none granted, every avatar
+-- upload (old code and new) failed with a generic RLS error even though the
+-- INSERT's own with_check passed. Avatars are meant to be public anyway
+-- (served via getPublicUrl), so a public SELECT policy is correct here.
+drop policy if exists "Anyone can view avatars" on storage.objects;
+create policy "Anyone can view avatars"
+  on storage.objects for select
+  to public
+  using (bucket_id = 'avatars');
 -- ── daily_check_ins: users can read only their own check-in history ──
 -- All writes go through record_check_in() (security definer) — no insert/
 -- update/delete grant to authenticated, mirroring join_cohort's pattern.

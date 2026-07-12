@@ -6,6 +6,7 @@ import { Card } from '../../app/components/ui/Card';
 import { Input } from '../../app/components/ui/Input';
 import { Badge } from '../../app/components/ui/Badge';
 import { Toast } from '../../app/components/ui/Toast';
+import { AvatarCropModal } from '../../app/components/ui/AvatarCropModal';
 
 /* ── Preferences (client-only, persisted to localStorage — no backend column yet) ── */
 const PREFS_KEY = 'nixit:prefs';
@@ -78,6 +79,7 @@ export function ProfileScreen({ user, onUserUpdate, onSignOut, onToggleDnd }: Pr
   const [username, setUsername] = useState(user.username);
   const [savingName, setSavingName] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [cropSrc, setCropSrc] = useState<string | null>(null);
 
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -96,20 +98,29 @@ export function ProfileScreen({ user, onUserUpdate, onSignOut, onToggleDnd }: Pr
   const nameChanged = username.trim() !== user.username && username.trim().length > 0;
 
   /* ── Handlers ── */
-  const handleAvatarPick = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFilePick = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     e.target.value = '';
     if (!file) return;
     if (!file.type.startsWith('image/')) { flash('error', 'Please choose an image file.'); return; }
     if (file.size > 5 * 1024 * 1024) { flash('error', 'Image must be under 5 MB.'); return; }
 
+    const reader = new FileReader();
+    reader.onload = () => setCropSrc(reader.result as string);
+    reader.onerror = () => flash('error', 'Could not read image.');
+    reader.readAsDataURL(file);
+  };
+
+  const handleCropSave = async (blob: Blob) => {
+    setCropSrc(null);
     setUploading(true);
     const { data: { user: authUser } } = await supabase.auth.getUser();
     if (!authUser) { setUploading(false); flash('error', 'Your session expired. Please sign in again.'); return; }
 
-    const ext = file.name.split('.').pop() ?? 'png';
-    const path = `${authUser.id}.${ext}`;
-    const { error: uploadError } = await supabase.storage.from('avatars').upload(path, file, { upsert: true });
+    const path = `${authUser.id}.jpg`;
+    const { error: uploadError } = await supabase.storage
+      .from('avatars')
+      .upload(path, blob, { upsert: true, contentType: 'image/jpeg' });
     if (uploadError) { setUploading(false); flash('error', `Upload failed: ${uploadError.message}`); return; }
 
     const publicUrl = supabase.storage.from('avatars').getPublicUrl(path).data.publicUrl;
@@ -188,7 +199,7 @@ export function ProfileScreen({ user, onUserUpdate, onSignOut, onToggleDnd }: Pr
         <div style={{ display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap' }}>
           <div style={{ position: 'relative' }}>
             <Avatar src={user.profile_image_url} name={user.username} size="2xl" />
-            <input ref={fileRef} type="file" accept="image/*" onChange={handleAvatarPick} style={{ display: 'none' }} />
+            <input ref={fileRef} type="file" accept="image/*" onChange={handleFilePick} style={{ display: 'none' }} />
           </div>
           <div style={{ flex: 1, minWidth: 200, display: 'flex', flexDirection: 'column', gap: 6 }}>
             <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 'var(--text-2xl)', color: 'var(--color-text)', lineHeight: 1.1 }}>
@@ -304,6 +315,14 @@ export function ProfileScreen({ user, onUserUpdate, onSignOut, onToggleDnd }: Pr
       <div style={{ display: 'flex', justifyContent: 'center', paddingTop: 4 }}>
         <Button variant="danger" size="sm" onClick={onSignOut}>Sign Out</Button>
       </div>
+
+      {cropSrc && (
+        <AvatarCropModal
+          src={cropSrc}
+          onCancel={() => setCropSrc(null)}
+          onSave={handleCropSave}
+        />
+      )}
     </div>
   );
 }
