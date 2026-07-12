@@ -180,3 +180,16 @@ begin
   return query select new_streak, new_longest, today;
 end;
 $$;
+
+-- Craving sessions: one row per CraveCrushers play session (personal stat, no cohort scoping)
+create table if not exists craving_sessions (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references users(id) on delete cascade,
+  game_type text not null check (game_type in ('box_breathing', 'craving_countdown', 'ping_pong_ai')),
+  started_at timestamptz not null,
+  duration_seconds int not null check (duration_seconds >= 0),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_craving_sessions_user_created
+  on craving_sessions(user_id, created_at);
