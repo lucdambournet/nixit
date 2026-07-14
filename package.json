@@ -14,7 +14,8 @@
     "test:e2e": "playwright test"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.0.0",
+    "@supabase/ssr": "^0.12.1",
+    "@supabase/supabase-js": "^2.110.3",
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
     "react-easy-crop": "^6.2.2",
