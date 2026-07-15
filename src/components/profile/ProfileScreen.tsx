@@ -220,7 +220,7 @@ export function ProfileScreen({ user, onUserUpdate, onSignOut, onToggleDnd }: Pr
   ];
 
   return (
-    <div style={{ padding: '32px 40px 64px', maxWidth: 680, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 20 }}>
+    <div style={{ padding: '32px clamp(16px, 6vw, 40px) 64px', maxWidth: 680, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 20 }}>
       {toast && (
         <div style={{ position: 'fixed', bottom: 32, left: '50%', transform: 'translateX(-50%)', zIndex: 100 }}>
           <Toast type={toast.type} message={toast.msg} visible onClose={() => setToast(null)} />
