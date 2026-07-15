@@ -4,6 +4,7 @@ export type ChatMessageRow = {
   author_id: string;
   text: string;
   type: 'normal' | 'help-alert' | 'tap-out-request';
+  request_id: string | null;
   created_at: string;
 };
 
@@ -21,6 +22,7 @@ export type DisplayMessage = {
   time: string;
   isMe: boolean;
   type: ChatMessageRow['type'];
+  requestId: string | null;
 };
 
 export function mapMessageRow(row: ChatMessageRow, author: AuthorInfo | undefined, currentUserId: string): DisplayMessage {
@@ -32,6 +34,7 @@ export function mapMessageRow(row: ChatMessageRow, author: AuthorInfo | undefine
     time: new Date(row.created_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }),
     isMe: row.author_id === currentUserId,
     type: row.type,
+    requestId: row.request_id ?? null,
   };
 }
 

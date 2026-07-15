@@ -10,6 +10,7 @@ function makeRow(overrides: Partial<ChatMessageRow> = {}): ChatMessageRow {
     author_id: 'user-1',
     text: 'hello',
     type: 'normal',
+    request_id: null,
     created_at: '2026-07-03T08:12:00.000Z',
     ...overrides,
   };
@@ -27,6 +28,7 @@ describe('mapMessageRow', () => {
       time: expect.any(String),
       isMe: false,
       type: 'normal',
+      requestId: null,
     });
   });
 
@@ -50,7 +52,7 @@ describe('mapMessageRow', () => {
 });
 
 describe('shouldShowAuthorName', () => {
-  const base: DisplayMessage = { id: 'a', authorId: 'user-1', from: 'alex_quit', text: 'hi', time: '8:00 AM', isMe: false, type: 'normal' };
+  const base: DisplayMessage = { id: 'a', authorId: 'user-1', from: 'alex_quit', text: 'hi', time: '8:00 AM', isMe: false, type: 'normal', requestId: null };
 
   it('is true for the first message from another author', () => {
     expect(shouldShowAuthorName([base], 0)).toBe(true);
