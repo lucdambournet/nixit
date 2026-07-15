@@ -1,10 +1,14 @@
 import { supabase } from './supabase';
 
+export type NotificationCategory = 'help_alerts' | 'tap_out_updates';
+
 export interface PushDispatchPayload {
   userIds: string[];
   title: string;
   body: string;
   url?: string;
+  /** Recipients who disabled this category (default: enabled) are skipped server-side (#49). */
+  category: NotificationCategory;
 }
 
 /**

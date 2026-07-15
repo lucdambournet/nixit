@@ -834,6 +834,55 @@ function Dashboard() {
     };
   }, [userData?.id, navigate]);
 
+  // In-app notification badge on the Chat nav item (#49): counts help-alert
+  // / tap-out-request messages posted since this user last opened chat.
+  const [unseenAlertCount, setUnseenAlertCount] = useState(0);
+
+  useEffect(() => {
+    if (!cohortId || !userData?.id) return;
+    const lastSeenKey = `nixit:lastSeenAlertAt:${userData.id}`;
+    if (!localStorage.getItem(lastSeenKey)) {
+      localStorage.setItem(lastSeenKey, new Date().toISOString());
+    }
+
+    // Reads lastSeenAt fresh each call (not captured) so it reflects the
+    // "entered chat" reset from the effect below even mid-poll.
+    const refresh = () =>
+      supabase
+        .from('chat_messages')
+        .select('id', { count: 'exact', head: true })
+        .eq('cohort_id', cohortId)
+        .in('type', ['help-alert', 'tap-out-request'])
+        .gt('created_at', localStorage.getItem(lastSeenKey)!)
+        .then(({ count }) => setUnseenAlertCount(count ?? 0));
+
+    void refresh();
+
+    // Realtime is the fast path; a short poll is the reliable fallback (see
+    // the same note on TapOutRequestBanner's effect).
+    const channel = supabase
+      .channel(`unseen-alerts-${cohortId}`)
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'chat_messages', filter: `cohort_id=eq.${cohortId}` },
+        () => void refresh()
+      )
+      .subscribe();
+
+    const interval = setInterval(() => void refresh(), 3000);
+
+    return () => {
+      clearInterval(interval);
+      supabase.removeChannel(channel);
+    };
+  }, [cohortId, userData?.id]);
+
+  useEffect(() => {
+    if (page !== 'chat' || !userData?.id) return;
+    localStorage.setItem(`nixit:lastSeenAlertAt:${userData.id}`, new Date().toISOString());
+    setUnseenAlertCount(0);
+  }, [page, userData?.id]);
+
   const toggleDnd = async (next: boolean): Promise<boolean> => {
     if (!userData) return false;
     const prev = userData.dnd;
@@ -849,7 +898,7 @@ function Dashboard() {
 
   const NAV = [
     { id: 'home',    label: 'Home',      icon: <HomeIcon /> },
-    { id: 'chat',    label: 'Chat',      icon: <ChatIcon /> },
+    { id: 'chat',    label: 'Chat',      icon: <ChatIcon />, badge: unseenAlertCount > 0 ? unseenAlertCount : undefined },
     { id: 'crave',   label: 'Crave',     icon: <CraveIcon /> },
     { id: 'dates',   label: 'Nix Dates', icon: <CalIcon /> },
     { id: 'profile', label: 'Profile',   icon: <UserIcon /> },
@@ -942,6 +991,16 @@ function Dashboard() {
               const { error } = await supabase.rpc('request_tap_out');
               if (error) { alert(error.message); return; }
               setPage('chat');
+
+              const recipientIds = members
+                .filter(m => m.user && m.user.id !== userData.id)
+                .map(m => m.user.id);
+              void dispatchPushNotification({
+                userIds: recipientIds,
+                title: 'Tap-Out Request',
+                body: `${userData.username} requested to tap out and needs your approval.`,
+                category: 'tap_out_updates',
+              });
             }}
             onSendHelpAlert={async () => {
               if (!confirm('Send a help alert to your cohort? Everyone will see it in chat and be notified.')) return false;
@@ -960,6 +1019,7 @@ function Dashboard() {
                 userIds: recipientIds,
                 title: 'Help Alert',
                 body: `${userData.username} could use support in your cohort.`,
+                category: 'help_alerts',
               });
               return true;
             }}

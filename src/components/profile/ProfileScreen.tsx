@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { supabase } from '../../app/lib/supabase';
 import { Avatar } from '../../app/components/ui/Avatar';
 import { Button } from '../../app/components/ui/Button';
@@ -92,6 +92,21 @@ export function ProfileScreen({ user, onUserUpdate, onSignOut, onToggleDnd }: Pr
   const [toast, setToast] = useState<{ type: 'success' | 'error'; msg: string } | null>(null);
   const [pushEnabling, setPushEnabling] = useState(false);
   const [pushEnabled, setPushEnabled] = useState(false);
+  const [notifPrefs, setNotifPrefs] = useState({ helpAlerts: true, tapOutUpdates: true });
+
+  useEffect(() => {
+    let cancelled = false;
+    supabase
+      .from('notification_preferences')
+      .select('help_alerts_enabled, tap_out_updates_enabled')
+      .eq('user_id', user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (cancelled || !data) return;
+        setNotifPrefs({ helpAlerts: data.help_alerts_enabled, tapOutUpdates: data.tap_out_updates_enabled });
+      });
+    return () => { cancelled = true; };
+  }, [user.id]);
 
   const flash = (type: 'success' | 'error', msg: string) => {
     setToast({ type, msg });
@@ -176,6 +191,20 @@ export function ProfileScreen({ user, onUserUpdate, onSignOut, onToggleDnd }: Pr
     if (!result.ok) { flash('error', result.message); return; }
     setPushEnabled(true);
     flash('success', 'Push notifications enabled on this device.');
+  };
+
+  const setNotifPref = async (key: 'helpAlerts' | 'tapOutUpdates', value: boolean) => {
+    const next = { ...notifPrefs, [key]: value };
+    setNotifPrefs(next);
+    const { error } = await supabase.from('notification_preferences').upsert({
+      user_id: user.id,
+      help_alerts_enabled: next.helpAlerts,
+      tap_out_updates_enabled: next.tapOutUpdates,
+    }, { onConflict: 'user_id' });
+    if (error) {
+      setNotifPrefs(notifPrefs);
+      flash('error', `Could not save preference: ${error.message}`);
+    }
   };
 
   const setPref = (key: keyof Prefs, value: boolean) => {
@@ -275,6 +304,30 @@ export function ProfileScreen({ user, onUserUpdate, onSignOut, onToggleDnd }: Pr
           </div>
         </Card>
       )}
+
+      {/* ── Notification preferences ── */}
+      <Card variant="default" padding="lg" style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+        <SectionTitle>Notifications</SectionTitle>
+        {([
+          { key: 'helpAlerts' as const, label: 'Help alerts', desc: "Get notified when a cohort member sends a help alert." },
+          { key: 'tapOutUpdates' as const, label: 'Tap-out updates', desc: 'Get notified about tap-out requests and approvals in your cohort.' },
+        ]).map((row, i) => (
+          <div key={row.key} style={{
+            display: 'flex', alignItems: 'center', gap: 16, padding: '14px 0',
+            borderTop: i === 0 ? 'none' : '1px solid var(--color-border-subtle)',
+          }}>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontFamily: 'var(--font-body)', fontWeight: 600, fontSize: 'var(--text-base)', color: 'var(--color-text)' }}>
+                {row.label}
+              </div>
+              <div style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)', lineHeight: 'var(--leading-snug)', marginTop: 2 }}>
+                {row.desc}
+              </div>
+            </div>
+            <Switch checked={notifPrefs[row.key]} onChange={v => setNotifPref(row.key, v)} />
+          </div>
+        ))}
+      </Card>
 
       {/* ── Account details ── */}
       <Card variant="default" padding="lg" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>

@@ -177,6 +177,34 @@ create policy "users can delete their own push subscriptions"
   to authenticated
   using (user_id = (select auth.uid()));
 
+-- ── notification_preferences: strictly self-scoped (#49) ──────
+-- Push dispatch itself (supabase/functions/dispatch-push) reads this table
+-- with the service role key, which bypasses RLS, so no cross-user SELECT
+-- policy is needed here for that path.
+alter table public.notification_preferences enable row level security;
+
+grant select, insert, update on table public.notification_preferences to authenticated;
+grant all on table public.notification_preferences to service_role;
+
+drop policy if exists "users can read their own notification preferences" on public.notification_preferences;
+create policy "users can read their own notification preferences"
+  on public.notification_preferences for select
+  to authenticated
+  using (user_id = (select auth.uid()));
+
+drop policy if exists "users can create their own notification preferences" on public.notification_preferences;
+create policy "users can create their own notification preferences"
+  on public.notification_preferences for insert
+  to authenticated
+  with check (user_id = (select auth.uid()));
+
+drop policy if exists "users can update their own notification preferences" on public.notification_preferences;
+create policy "users can update their own notification preferences"
+  on public.notification_preferences for update
+  to authenticated
+  using (user_id = (select auth.uid()))
+  with check (user_id = (select auth.uid()));
+
 -- ── storage.objects (avatars bucket): public read ─────────────
 -- Applied 2026-07-11 while debugging issue #61 (avatar crop upload).
 -- storage.objects already had INSERT/UPDATE policies scoping each user to
