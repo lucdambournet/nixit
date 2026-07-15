@@ -29,7 +29,11 @@ function Signup() {
     setError(null);
     setLoading(true);
 
-    const { data, error: signUpError } = await supabase.auth.signUp({ email, password });
+    const { data, error: signUpError } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { data: { username } },
+    });
     if (signUpError) { setError(signUpError.message); setLoading(false); return; }
     const user = data.user;
     if (!user) { setError('Signup succeeded but no user was returned.'); setLoading(false); return; }
