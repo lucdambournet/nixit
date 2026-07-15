@@ -20,6 +20,9 @@ const TEST_EMAIL_B = 'unit_test_b@nixit.dev';
 const TEST_PASSWORD = 'testpass123';
 
 let cohortId: string;
+let otherCohortId: string;
+let nixDateId: string;
+let otherNixDateId: string;
 let userAClient: SupabaseClient;
 let userBClient: SupabaseClient;
 let userAId: string;
@@ -40,21 +43,38 @@ async function createTestUser(email: string): Promise<{ id: string; client: Supa
   return { id, client };
 }
 
-beforeAll(async () => {
-  // Find September 2026 cohort
-  const { data } = await admin.from('cohorts').select('id').eq('start_date', '2026-09-01').single();
-  cohortId = data!.id;
+async function createTestCohort(monthSuffix: string): Promise<{ nixDateId: string; cohortId: string }> {
+  const month = `unit-test-${Date.now()}-${monthSuffix}`;
+  const { data: nixDate } = await admin
+    .from('nix_dates')
+    .insert({ month, start_date: '2099-01-01' })
+    .select('id')
+    .single();
+  const { data: cohort } = await admin
+    .from('cohorts')
+    .insert({ nix_date_id: nixDate!.id, start_date: '2099-01-01', max_members: 25 })
+    .select('id')
+    .single();
+  return { nixDateId: nixDate!.id, cohortId: cohort!.id };
+}
 
-  // Reset member state
+beforeAll(async () => {
+  // Use dedicated, disposable cohorts so this suite never contends with the
+  // shared live-DB cohort used by E2E specs (that caused member_count drift
+  // and flaky failures — see issue #76).
+  const primary = await createTestCohort('a');
+  cohortId = primary.cohortId;
+  nixDateId = primary.nixDateId;
+
+  const secondary = await createTestCohort('b');
+  otherCohortId = secondary.cohortId;
+  otherNixDateId = secondary.nixDateId;
+
   const u1 = await createTestUser(TEST_EMAIL_A);
   userAId = u1.id; userAClient = u1.client;
 
   const u2 = await createTestUser(TEST_EMAIL_B);
   userBId = u2.id; userBClient = u2.client;
-
-  // Clean up any existing memberships
-  await admin.from('cohort_members').delete().in('user_id', [userAId, userBId]);
-  await admin.from('users').update({ active_cohort_id: null }).in('id', [userAId, userBId]);
 });
 
 afterAll(async () => {
@@ -62,6 +82,20 @@ afterAll(async () => {
   await admin.from('users').delete().in('id', [userAId, userBId]);
   await admin.auth.admin.deleteUser(userAId);
   await admin.auth.admin.deleteUser(userBId);
+  await admin.from('cohorts').delete().in('id', [cohortId, otherCohortId]);
+  await admin.from('nix_dates').delete().in('id', [nixDateId, otherNixDateId]);
+});
+
+describe('signup', () => {
+  it('rejects creating an auth user with an email already in use', async () => {
+    const { error } = await admin.auth.admin.createUser({
+      email: TEST_EMAIL_A,
+      password: TEST_PASSWORD,
+      email_confirm: true,
+    });
+    expect(error).not.toBeNull();
+    expect(error!.message.toLowerCase()).toContain('already');
+  });
 });
 
 describe('join_cohort', () => {
@@ -80,10 +114,7 @@ describe('join_cohort', () => {
   });
 
   it('rejects joining a second cohort while already in one', async () => {
-    // Find a different cohort
-    const { data: other } = await admin.from('cohorts')
-      .select('id').neq('id', cohortId).limit(1).single();
-    const { error } = await userAClient.rpc('join_cohort', { target_cohort_id: other!.id });
+    const { error } = await userAClient.rpc('join_cohort', { target_cohort_id: otherCohortId });
     expect(error).not.toBeNull();
     expect(error!.message).toMatch(/already has an active cohort/i);
   });
