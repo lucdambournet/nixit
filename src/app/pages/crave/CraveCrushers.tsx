@@ -29,7 +29,7 @@ export function CraveCrushers({ userId }: CraveCrushersProps) {
   }
 
   return (
-    <div style={{ padding: '32px 40px 64px', maxWidth: 760, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 22 }}>
+    <div style={{ padding: '32px clamp(16px, 6vw, 40px) 64px', maxWidth: 760, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 22 }}>
       <div>
         <h1 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 'var(--text-3xl)', color: 'var(--color-text)', margin: '0 0 8px', letterSpacing: 'var(--tracking-tight)' }}>
           Crave Crushers

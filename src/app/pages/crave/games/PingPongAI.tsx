@@ -81,7 +81,7 @@ export function PingPongAI({ userId, onExit }: PingPongAIProps) {
   };
 
   return (
-    <div style={{ padding: '32px 40px 64px', maxWidth: 560, margin: '0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20 }}>
+    <div style={{ padding: '32px clamp(16px, 6vw, 40px) 64px', maxWidth: 560, margin: '0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20 }}>
       <div style={{ width: '100%' }}>
         <Button variant="ghost" size="sm" onClick={handleExit}>← Back to Crave Crushers</Button>
       </div>

@@ -66,7 +66,6 @@ function Enrollment() {
         .order('start_date', { ascending: true });
 
       if (error) { console.error('cohorts query error:', error); setError(error.message); setLoading(false); return; }
-      console.log('cohorts fetched:', data?.length, data);
       setCohorts((data ?? []) as unknown as Cohort[]);
       setLoading(false);
     };
@@ -92,14 +91,14 @@ function Enrollment() {
   };
 
   return (
-    <div className="nixit-blob-bg" style={{ minHeight: '100vh', position: 'relative' }}>
+    <div className="nixit-blob-bg nixit-page-enter" style={{ minHeight: '100vh', position: 'relative' }}>
       {toast && (
         <div style={{ position: 'fixed', bottom: 32, left: '50%', transform: 'translateX(-50%)', zIndex: 100 }}>
           <Toast type={toast.type} message={toast.msg} visible onClose={() => setToast(null)} />
         </div>
       )}
 
-      <div style={{ maxWidth: 640, margin: '0 auto', padding: '40px 24px 64px' }}>
+      <div style={{ maxWidth: 640, margin: '0 auto', padding: '40px clamp(16px, 5vw, 24px) 64px' }}>
         {/* Header */}
         <div style={{ marginBottom: 32 }}>
           <div style={{ marginBottom: 10 }}>

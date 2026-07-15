@@ -128,7 +128,7 @@ function HomeScreen({ user, cohort, members, presence, onGoToChat, onGoToCrave, 
   const cohortLabel = cohort.nix_date?.month ?? 'Your Cohort';
 
   return (
-    <div style={{ padding: '32px 40px 64px', maxWidth: 760, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 22 }}>
+    <div style={{ padding: '32px clamp(16px, 6vw, 40px) 64px', maxWidth: 760, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 22 }}>
       {checkInToast && (
         <div style={{ position: 'fixed', bottom: 88, left: '50%', transform: 'translateX(-50%)', zIndex: 100 }}>
           <Toast type={checkInToast.type} message={checkInToast.msg} visible onClose={() => setCheckInToast(null)} />
@@ -350,7 +350,7 @@ function ChatScreen({ user, cohort, members, presence, selfStatus, onToggleDnd }
       )}
 
       {/* Header */}
-      <div style={{ padding: '18px 32px', borderBottom: '1px solid var(--color-border-subtle)', background: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(8px)', flexShrink: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div style={{ padding: '18px clamp(16px, 5vw, 32px)', borderBottom: '1px solid var(--color-border-subtle)', background: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(8px)', flexShrink: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
           <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 'var(--text-xl)', color: 'var(--color-text)' }}>{cohortLabel}</div>
           <div style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)', marginTop: 2 }}>
@@ -374,7 +374,7 @@ function ChatScreen({ user, cohort, members, presence, selfStatus, onToggleDnd }
       </div>
 
       {/* Message list */}
-      <div ref={listRef} style={{ flex: 1, overflowY: 'auto', padding: '20px 32px', display: 'flex', flexDirection: 'column', gap: 0 }}>
+      <div ref={listRef} style={{ flex: 1, overflowY: 'auto', padding: '20px clamp(16px, 5vw, 32px)', display: 'flex', flexDirection: 'column', gap: 0 }}>
         {loadError && (
           <div style={{ textAlign: 'center', padding: 24, fontFamily: 'var(--font-body)', color: 'var(--color-text-muted)' }}>
             Couldn't load messages: {loadError}
@@ -438,7 +438,7 @@ function ChatScreen({ user, cohort, members, presence, selfStatus, onToggleDnd }
       </div>
 
       {/* Input bar */}
-      <div style={{ padding: '14px 24px', borderTop: '1px solid var(--color-border-subtle)', display: 'flex', gap: 10, alignItems: 'center', background: 'white', flexShrink: 0 }}>
+      <div style={{ padding: '14px clamp(14px, 4vw, 24px)', borderTop: '1px solid var(--color-border-subtle)', display: 'flex', gap: 10, alignItems: 'center', background: 'white', flexShrink: 0 }}>
         <StatusPopover src={user.profile_image_url} name={user.username} size="sm" status={selfStatus} dnd={user.dnd} onToggleDnd={onToggleDnd} />
         <div style={{ flex: 1 }}>
           <Input
@@ -614,7 +614,7 @@ function DatesScreen({ activeCohortStart }: { activeCohortStart: string }) {
   const activeYear = activeDate.getUTCFullYear();
 
   return (
-    <div style={{ padding: '32px 40px 64px', maxWidth: 680, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 20 }}>
+    <div style={{ padding: '32px clamp(16px, 6vw, 40px) 64px', maxWidth: 680, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 20 }}>
       {toast && (
         <div style={{ position: 'fixed', bottom: 32, left: '50%', transform: 'translateX(-50%)', zIndex: 100 }}>
           <Toast type={toast.type} message={toast.msg} visible onClose={() => setToast(null)} />
