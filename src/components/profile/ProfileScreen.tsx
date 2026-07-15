@@ -7,6 +7,7 @@ import { Input } from '../../app/components/ui/Input';
 import { Badge } from '../../app/components/ui/Badge';
 import { Toast } from '../../app/components/ui/Toast';
 import { AvatarCropModal } from '../../app/components/ui/AvatarCropModal';
+import { isPushSupported, subscribeToPush } from '../../app/lib/push';
 
 /* ── Preferences (client-only, persisted to localStorage — no backend column yet) ── */
 const PREFS_KEY = 'nixit:prefs';
@@ -58,6 +59,7 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
 }
 
 interface ProfileUser {
+  id: string;
   username: string;
   email: string;
   profile_image_url: string | null;
@@ -88,6 +90,8 @@ export function ProfileScreen({ user, onUserUpdate, onSignOut, onToggleDnd }: Pr
 
   const [prefs, setPrefs] = useState<Prefs>(loadPrefs);
   const [toast, setToast] = useState<{ type: 'success' | 'error'; msg: string } | null>(null);
+  const [pushEnabling, setPushEnabling] = useState(false);
+  const [pushEnabled, setPushEnabled] = useState(false);
 
   const flash = (type: 'success' | 'error', msg: string) => {
     setToast({ type, msg });
@@ -163,6 +167,15 @@ export function ProfileScreen({ user, onUserUpdate, onSignOut, onToggleDnd }: Pr
     setNewPassword('');
     setConfirmPassword('');
     flash('success', 'Password updated.');
+  };
+
+  const handleEnablePush = async () => {
+    setPushEnabling(true);
+    const result = await subscribeToPush(user.id);
+    setPushEnabling(false);
+    if (!result.ok) { flash('error', result.message); return; }
+    setPushEnabled(true);
+    flash('success', 'Push notifications enabled on this device.');
   };
 
   const setPref = (key: keyof Prefs, value: boolean) => {
@@ -243,6 +256,25 @@ export function ProfileScreen({ user, onUserUpdate, onSignOut, onToggleDnd }: Pr
           />
         </div>
       </Card>
+
+      {/* ── Push notifications ── */}
+      {isPushSupported() && (
+        <Card variant="default" padding="lg">
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
+            <div>
+              <div style={{ fontFamily: 'var(--font-body)', fontWeight: 600, fontSize: 'var(--text-base)', color: 'var(--color-text)' }}>
+                Push notifications
+              </div>
+              <div style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)', lineHeight: 'var(--leading-snug)', marginTop: 2 }}>
+                Get notified on this device for help alerts and tap-out updates from your cohort.
+              </div>
+            </div>
+            <Button variant="outline" size="sm" onClick={handleEnablePush} disabled={pushEnabling || pushEnabled}>
+              {pushEnabled ? 'Enabled' : pushEnabling ? 'Enabling…' : 'Enable on this device'}
+            </Button>
+          </div>
+        </Card>
+      )}
 
       {/* ── Account details ── */}
       <Card variant="default" padding="lg" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
