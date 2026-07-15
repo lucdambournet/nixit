@@ -124,4 +124,50 @@ test.describe('Crave Crushers', () => {
     await page.getByRole('button', { name: 'Back to Crave Crushers' }).click();
     await expect(page.getByRole('heading', { name: 'Crave Crushers' })).toBeVisible();
   });
+
+  test('exiting via the in-game Back button logs a craving_sessions row', async ({ page }) => {
+    const { data: { users } } = await admin.auth.admin.listUsers();
+    const userId = users.find(u => u.email === E2E_EMAIL)!.id;
+    await admin.from('craving_sessions').delete().eq('user_id', userId);
+
+    await login(page);
+    await page.getByRole('button', { name: 'Crave', exact: true }).click();
+    await page.getByRole('button', { name: 'Play Box Breathing' }).click();
+    await expect(page.getByText('Breathe in')).toBeVisible();
+    await page.waitForTimeout(1200);
+    await page.getByRole('button', { name: 'Back to Crave Crushers' }).click();
+    await expect(page.getByRole('heading', { name: 'Crave Crushers' })).toBeVisible();
+
+    await expect.poll(async () => {
+      const { data } = await admin.from('craving_sessions').select('*').eq('user_id', userId);
+      return data?.length ?? 0;
+    }).toBe(1);
+    const { data: rows } = await admin.from('craving_sessions').select('*').eq('user_id', userId);
+    expect(rows![0].game_type).toBe('box_breathing');
+    expect(rows![0].duration_seconds).toBeGreaterThan(0);
+  });
+
+  test('navigating away via the sidenav (not the in-game Back button) still logs a craving_sessions row', async ({ page }) => {
+    const { data: { users } } = await admin.auth.admin.listUsers();
+    const userId = users.find(u => u.email === E2E_EMAIL)!.id;
+    await admin.from('craving_sessions').delete().eq('user_id', userId);
+
+    await login(page);
+    await page.getByRole('button', { name: 'Crave', exact: true }).click();
+    await page.getByRole('button', { name: 'Play Box Breathing' }).click();
+    await expect(page.getByText('Breathe in')).toBeVisible();
+    await page.waitForTimeout(1200);
+
+    // Exit by navigating to a different sidenav item, unmounting the game
+    // without going through the in-game Back button.
+    await page.getByRole('button', { name: 'Home', exact: true }).click();
+    await expect(page.getByText('Nicotine-free for', { exact: false })).toBeVisible();
+
+    await expect.poll(async () => {
+      const { data } = await admin.from('craving_sessions').select('*').eq('user_id', userId);
+      return data?.length ?? 0;
+    }).toBe(1);
+    const { data: rows } = await admin.from('craving_sessions').select('*').eq('user_id', userId);
+    expect(rows![0].game_type).toBe('box_breathing');
+  });
 });

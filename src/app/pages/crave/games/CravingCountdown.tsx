@@ -9,8 +9,7 @@ interface CravingCountdownProps {
 }
 
 export function CravingCountdown({ userId, onExit }: CravingCountdownProps) {
-  const { endSession } = useCravingSession(userId, 'craving_countdown');
-  const [startedAt] = useState(() => Date.now());
+  const { endSession, startedAtMs } = useCravingSession(userId, 'craving_countdown');
   const [now, setNow] = useState(() => Date.now());
   const [tally, setTally] = useState(0);
 
@@ -19,7 +18,7 @@ export function CravingCountdown({ userId, onExit }: CravingCountdownProps) {
     return () => clearInterval(interval);
   }, []);
 
-  const remaining = computeRemainingSeconds(now - startedAt);
+  const remaining = computeRemainingSeconds(now - startedAtMs);
   const complete = isCountdownComplete(remaining);
   const minutes = Math.floor(remaining / 60);
   const seconds = remaining % 60;
@@ -28,6 +27,15 @@ export function CravingCountdown({ userId, onExit }: CravingCountdownProps) {
     endSession();
     onExit();
   };
+
+  useEffect(() => {
+    if (!complete) return;
+    // Auto-return to the picker (logging the session) shortly after the
+    // countdown hits 0:00, instead of waiting indefinitely for a manual tap.
+    const timer = setTimeout(handleExit, 2000);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [complete]);
 
   return (
     <div style={{ padding: '32px 40px 64px', maxWidth: 480, margin: '0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 28 }}>
