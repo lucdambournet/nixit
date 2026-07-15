@@ -398,3 +398,11 @@ create table if not exists push_subscriptions (
 );
 
 create index if not exists idx_push_subscriptions_user on push_subscriptions(user_id);
+
+-- Notification preferences: one row per user, upserted on first change (#49)
+create table if not exists notification_preferences (
+  user_id uuid primary key references users(id) on delete cascade,
+  help_alerts_enabled boolean not null default true,
+  tap_out_updates_enabled boolean not null default true,
+  updated_at timestamptz not null default now()
+);

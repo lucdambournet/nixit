@@ -9,11 +9,14 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import webpush from 'npm:web-push@3';
 
+type NotificationCategory = 'help_alerts' | 'tap_out_updates';
+
 interface DispatchPayload {
   userIds: string[];
   title: string;
   body: string;
   url?: string;
+  category: NotificationCategory;
 }
 
 Deno.serve(async req => {
@@ -26,8 +29,8 @@ Deno.serve(async req => {
   }
 
   const payload: DispatchPayload = await req.json();
-  if (!payload.userIds?.length || !payload.title || !payload.body) {
-    return new Response(JSON.stringify({ error: 'userIds, title, and body are required' }), { status: 400 });
+  if (!payload.userIds?.length || !payload.title || !payload.body || !payload.category) {
+    return new Response(JSON.stringify({ error: 'userIds, title, body, and category are required' }), { status: 400 });
   }
 
   webpush.setVapidDetails('mailto:support@nixit.app', vapidPublicKey, vapidPrivateKey);
@@ -37,10 +40,30 @@ Deno.serve(async req => {
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
   );
 
+  // Recipients default to enabled (no row = opted in); only exclude users
+  // who explicitly disabled this category (#49).
+  const prefColumn = payload.category === 'help_alerts' ? 'help_alerts_enabled' : 'tap_out_updates_enabled';
+  const { data: disabledPrefs, error: prefsError } = await supabase
+    .from('notification_preferences')
+    .select('user_id')
+    .in('user_id', payload.userIds)
+    .eq(prefColumn, false);
+
+  if (prefsError) {
+    return new Response(JSON.stringify({ error: prefsError.message }), { status: 500 });
+  }
+
+  const disabledUserIds = new Set((disabledPrefs ?? []).map(p => p.user_id));
+  const targetUserIds = payload.userIds.filter(id => !disabledUserIds.has(id));
+
+  if (targetUserIds.length === 0) {
+    return new Response(JSON.stringify({ sent: 0, failed: 0, skippedByPreference: disabledUserIds.size }), { status: 200 });
+  }
+
   const { data: subscriptions, error } = await supabase
     .from('push_subscriptions')
     .select('endpoint, p256dh, auth')
-    .in('user_id', payload.userIds);
+    .in('user_id', targetUserIds);
 
   if (error) {
     return new Response(JSON.stringify({ error: error.message }), { status: 500 });
