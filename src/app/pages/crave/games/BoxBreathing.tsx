@@ -12,8 +12,7 @@ const PHASE_LABEL: Record<BreathPhase, string> = { in: 'Breathe in', hold: 'Hold
 const PHASE_SIZE: Record<BreathPhase, number> = { in: 220, hold: 220, out: 140 };
 
 export function BoxBreathing({ userId, onExit }: BoxBreathingProps) {
-  const { endSession } = useCravingSession(userId, 'box_breathing');
-  const [startedAt] = useState(() => Date.now());
+  const { endSession, startedAtMs } = useCravingSession(userId, 'box_breathing');
   const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
@@ -21,7 +20,7 @@ export function BoxBreathing({ userId, onExit }: BoxBreathingProps) {
     return () => clearInterval(interval);
   }, []);
 
-  const { phase, cycleCount } = computeBreathState(now - startedAt);
+  const { phase, cycleCount } = computeBreathState(now - startedAtMs);
 
   const handleExit = () => {
     endSession();

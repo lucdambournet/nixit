@@ -1,7 +1,9 @@
 export const COURT_HEIGHT = 300;
 export const PADDLE_HEIGHT = 60;
 export const BALL_SPEED_UP_FACTOR = 1.05;
-export const AI_FOLLOW_SPEED = 4;
+// Must stay below the ball's vertical speed (currently 2, see PingPongAI.tsx)
+// so the AI paddle can't perfectly track every frame and is actually beatable.
+export const AI_FOLLOW_SPEED = 1.5;
 
 /** Reflects the ball off the top/bottom walls; no-op when still mid-court. */
 export function stepBallWallBounce(y: number, vy: number, courtHeight: number = COURT_HEIGHT): { y: number; vy: number } {
