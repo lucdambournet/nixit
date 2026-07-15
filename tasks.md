@@ -10,7 +10,7 @@ Legend: [ ] pending, [~] in progress, [x] done (PR merged + issue closed)
 - [x] #48 Help alert workflow + dispatch — branch `issue-48-help-alert-workflow`
 - [x] #50 Tap-out request/approval/undo — branch `issue-50-tapout-workflow` (schema migrated live; also fixed a real double-count bug in member_count + broken DND grant, both pre-existing)
 - [x] #49 Notification preferences + in-app center — branch `issue-49-notification-center`
-- [ ] #69 Mobile DrawerNav — branch `issue-69-mobile-drawernav`
+- [x] #69 Mobile DrawerNav — branch `issue-69-mobile-drawernav`
 - [ ] #52 UI polish / responsive / onboarding transitions — branch `issue-52-ui-polish`
 - [ ] #53 Final QA / launch readiness — branch `issue-53-launch-readiness`
 

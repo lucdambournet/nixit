@@ -14,6 +14,8 @@ import { Toast } from '../components/ui/Toast';
 import { Logo } from '../components/ui/Logo';
 import { StatusPopover } from '../components/ui/StatusPopover';
 import { useIsActive } from '../hooks/useIsActive';
+import { useIsMobile } from '../hooks/useIsMobile';
+import { BottomNav } from '../components/navigation/BottomNav';
 import { resolveStatus, sortByActivity, type ResolvedStatus } from '../lib/presence';
 import { ProfileScreen } from '../../components/profile/ProfileScreen';
 import { CraveCrushers } from './crave/CraveCrushers';
@@ -340,7 +342,7 @@ function ChatScreen({ user, cohort, members, presence, selfStatus, onToggleDnd }
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       {toast && (
         <div style={{ position: 'fixed', bottom: 88, left: '50%', transform: 'translateX(-50%)', zIndex: 100 }}>
           <Toast type="error" message={toast.msg} visible onClose={() => setToast(null)} />
@@ -745,6 +747,7 @@ function Dashboard() {
   }, [navigate]);
 
   const isActive = useIsActive();
+  const isMobile = useIsMobile();
   const [presence, setPresence] = useState<Map<string, boolean>>(new Map());
   const presenceChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const cohortId = userData?.active_cohort?.id;
@@ -946,26 +949,34 @@ function Dashboard() {
         `,
       }} />
 
-      {/* Sidebar */}
-      <div style={{ position: 'relative', zIndex: 10, flexShrink: 0, boxShadow: 'var(--shadow-sm)' }}>
-        <SideNav
-          items={NAV}
-          activeId={page}
-          onNavigate={id => setPage(id as Page)}
-          collapsed={collapsed}
-          onToggle={() => setCollapsed(c => !c)}
-          logo={<SidebarLogo />}
-          userAvatar={<StatusPopover src={userData.profile_image_url} name={userData.username} size="sm" status={selfStatus} dnd={userData.dnd} onToggleDnd={toggleDnd} />}
-          userName={userData.username}
-          onUserClick={() => setPage('profile')}
-          userActive={page === 'profile'}
-          onSignOut={() => supabase.auth.signOut().then(() => navigate('/login'))}
-          style={{ height: '100vh' }}
-        />
-      </div>
+      {/* Sidebar (desktop) / bottom tab bar (mobile, #69) */}
+      {isMobile ? (
+        <BottomNav items={NAV} activeId={page} onNavigate={id => setPage(id as Page)} />
+      ) : (
+        <div style={{ position: 'relative', zIndex: 10, flexShrink: 0, boxShadow: 'var(--shadow-sm)' }}>
+          <SideNav
+            items={NAV}
+            activeId={page}
+            onNavigate={id => setPage(id as Page)}
+            collapsed={collapsed}
+            onToggle={() => setCollapsed(c => !c)}
+            logo={<SidebarLogo />}
+            userAvatar={<StatusPopover src={userData.profile_image_url} name={userData.username} size="sm" status={selfStatus} dnd={userData.dnd} onToggleDnd={toggleDnd} />}
+            userName={userData.username}
+            onUserClick={() => setPage('profile')}
+            userActive={page === 'profile'}
+            onSignOut={() => supabase.auth.signOut().then(() => navigate('/login'))}
+            style={{ height: '100vh' }}
+          />
+        </div>
+      )}
 
-      {/* Main content */}
-      <main style={{ flex: 1, overflowY: page === 'chat' ? 'hidden' : 'auto', position: 'relative', zIndex: 1 }}>
+      {/* Main content. On mobile, reserve space for the fixed BottomNav so it
+          never overlaps page content or ChatScreen's own fixed input bar. */}
+      <main style={{
+        flex: 1, overflowY: page === 'chat' ? 'hidden' : 'auto', position: 'relative', zIndex: 1,
+        height: isMobile ? 'calc(100vh - 56px - env(safe-area-inset-bottom, 0px))' : '100vh',
+      }}>
         {page === 'home' && (
           <HomeScreen
             user={userData}
