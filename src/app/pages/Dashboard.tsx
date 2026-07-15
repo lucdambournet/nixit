@@ -728,6 +728,7 @@ function Dashboard() {
         {page === 'profile' && (
           <ProfileScreen
             user={{
+              id: userData.id,
               username: userData.username,
               email: userData.email,
               profile_image_url: userData.profile_image_url,

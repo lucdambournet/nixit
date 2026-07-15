@@ -200,3 +200,15 @@ create table if not exists craving_sessions (
 
 create index if not exists idx_craving_sessions_user_created
   on craving_sessions(user_id, created_at);
+
+-- Push subscriptions: one row per browser/device Web Push registration (#51)
+create table if not exists push_subscriptions (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references users(id) on delete cascade,
+  endpoint text not null unique,
+  p256dh text not null,
+  auth text not null,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_push_subscriptions_user on push_subscriptions(user_id);

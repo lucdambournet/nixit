@@ -98,6 +98,31 @@ create policy "cohort members can send messages as themselves"
 
 alter publication supabase_realtime add table public.chat_messages;
 
+-- ── push_subscriptions: strictly self-scoped (#51) ────────────
+alter table public.push_subscriptions enable row level security;
+
+grant select, insert, delete on table public.push_subscriptions to authenticated;
+grant select, insert, update, delete on table public.push_subscriptions to service_role;
+revoke update on public.push_subscriptions from authenticated;
+
+drop policy if exists "users can read their own push subscriptions" on public.push_subscriptions;
+create policy "users can read their own push subscriptions"
+  on public.push_subscriptions for select
+  to authenticated
+  using (user_id = (select auth.uid()));
+
+drop policy if exists "users can create their own push subscriptions" on public.push_subscriptions;
+create policy "users can create their own push subscriptions"
+  on public.push_subscriptions for insert
+  to authenticated
+  with check (user_id = (select auth.uid()));
+
+drop policy if exists "users can delete their own push subscriptions" on public.push_subscriptions;
+create policy "users can delete their own push subscriptions"
+  on public.push_subscriptions for delete
+  to authenticated
+  using (user_id = (select auth.uid()));
+
 -- ── storage.objects (avatars bucket): public read ─────────────
 -- Applied 2026-07-11 while debugging issue #61 (avatar crop upload).
 -- storage.objects already had INSERT/UPDATE policies scoping each user to
