@@ -19,6 +19,7 @@ import { ProfileScreen } from '../../components/profile/ProfileScreen';
 import { CraveCrushers } from './crave/CraveCrushers';
 import { mapMessageRow, shouldShowAuthorName, type ChatMessageRow, type DisplayMessage } from '../lib/chatMessages';
 import { hasCheckedInToday, todayISODate } from '../lib/dailyCheckIn';
+import { dispatchPushNotification } from '../lib/pushDispatch';
 
 /* ── Inline SVG Icons ── */
 const S = { strokeWidth: '2', strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const };
@@ -81,9 +82,18 @@ function formatChatError(message: string) {
 }
 
 /* ── Home Screen ── */
-function HomeScreen({ user, cohort, members, presence, onGoToChat, onGoToCrave, onTapOut, onCheckInSuccess }: { user: UserData; cohort: CohortData; members: Member[]; presence: Map<string, boolean>; onGoToChat: () => void; onGoToCrave: () => void; onTapOut: () => void; onCheckInSuccess: (patch: Pick<UserData, 'current_streak' | 'longest_streak' | 'last_check_in_date'>) => void }) {
+function HomeScreen({ user, cohort, members, presence, onGoToChat, onGoToCrave, onTapOut, onSendHelpAlert, onCheckInSuccess }: { user: UserData; cohort: CohortData; members: Member[]; presence: Map<string, boolean>; onGoToChat: () => void; onGoToCrave: () => void; onTapOut: () => void; onSendHelpAlert: () => Promise<boolean>; onCheckInSuccess: (patch: Pick<UserData, 'current_streak' | 'longest_streak' | 'last_check_in_date'>) => void }) {
   const [isCheckingIn, setIsCheckingIn] = useState(false);
   const [checkInToast, setCheckInToast] = useState<{ type: 'success' | 'error'; msg: string } | null>(null);
+  const [sendingHelpAlert, setSendingHelpAlert] = useState(false);
+  const [helpAlertToast, setHelpAlertToast] = useState<{ type: 'success' | 'error'; msg: string } | null>(null);
+
+  const handleSendHelpAlert = async () => {
+    setSendingHelpAlert(true);
+    const ok = await onSendHelpAlert();
+    setSendingHelpAlert(false);
+    if (ok) setHelpAlertToast({ type: 'success', msg: 'Help alert sent to your cohort.' });
+  };
 
   const handleCheckIn = async () => {
     setIsCheckingIn(true);
@@ -120,6 +130,11 @@ function HomeScreen({ user, cohort, members, presence, onGoToChat, onGoToCrave, 
       {checkInToast && (
         <div style={{ position: 'fixed', bottom: 88, left: '50%', transform: 'translateX(-50%)', zIndex: 100 }}>
           <Toast type={checkInToast.type} message={checkInToast.msg} visible onClose={() => setCheckInToast(null)} />
+        </div>
+      )}
+      {helpAlertToast && (
+        <div style={{ position: 'fixed', bottom: 88, left: '50%', transform: 'translateX(-50%)', zIndex: 100 }}>
+          <Toast type={helpAlertToast.type} message={helpAlertToast.msg} visible onClose={() => setHelpAlertToast(null)} />
         </div>
       )}
       <div>
@@ -169,6 +184,16 @@ function HomeScreen({ user, cohort, members, presence, onGoToChat, onGoToCrave, 
           Craving hitting hard right now?
         </p>
         <Button variant="purple" size="md" onClick={onGoToCrave}>Feeling a craving?</Button>
+      </Card>
+
+      {/* Help Alert */}
+      <Card variant="default" padding="md" style={{ textAlign: 'center', borderColor: 'rgba(220, 53, 69, 0.3)' }}>
+        <p style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)', margin: '0 0 10px' }}>
+          Going through something tougher? Let your cohort know.
+        </p>
+        <Button variant="danger" size="md" onClick={handleSendHelpAlert} disabled={sendingHelpAlert}>
+          {sendingHelpAlert ? 'Sending…' : '🆘 Send Help Alert'}
+        </Button>
       </Card>
 
       {/* Cohort members */}
@@ -355,6 +380,21 @@ function ChatScreen({ user, cohort, members, presence, selfStatus, onToggleDnd }
         )}
         {msgs.map((msg, i) => {
           const showName = shouldShowAuthorName(msgs, i);
+
+          if (msg.type === 'help-alert') {
+            return (
+              <div key={msg.id} role="status" style={{ display: 'flex', justifyContent: 'center', margin: '10px 0' }}>
+                <span style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 8,
+                  background: 'rgba(220, 53, 69, 0.1)', border: '1px solid rgba(220, 53, 69, 0.35)',
+                  color: '#a52834', borderRadius: 'var(--radius-full)', padding: '8px 16px',
+                  fontFamily: 'var(--font-body)', fontWeight: 600, fontSize: 'var(--text-sm)', textAlign: 'center',
+                }}>
+                  🆘 {msg.text}
+                </span>
+              </div>
+            );
+          }
 
           return (
             <div key={msg.id} style={{ display: 'flex', flexDirection: 'column', alignItems: msg.isMe ? 'flex-end' : 'flex-start', marginBottom: 8 }}>
@@ -715,6 +755,26 @@ function Dashboard() {
               const { error } = await supabase.rpc('leave_cohort');
               if (error) { alert(error.message); return; }
               navigate('/enrollment');
+            }}
+            onSendHelpAlert={async () => {
+              if (!confirm('Send a help alert to your cohort? Everyone will see it in chat and be notified.')) return false;
+              const { error } = await supabase.from('chat_messages').insert({
+                cohort_id: cohort.id,
+                author_id: userData.id,
+                text: `${userData.username} sent a help alert.`,
+                type: 'help-alert',
+              });
+              if (error) { alert(`Could not send help alert: ${error.message}`); return false; }
+
+              const recipientIds = members
+                .filter(m => m.user && m.user.id !== userData.id)
+                .map(m => m.user.id);
+              void dispatchPushNotification({
+                userIds: recipientIds,
+                title: 'Help Alert',
+                body: `${userData.username} could use support in your cohort.`,
+              });
+              return true;
             }}
             onCheckInSuccess={patch => setUserData(u => (u ? { ...u, ...patch } : u))}
           />

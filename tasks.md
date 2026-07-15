@@ -7,7 +7,7 @@ Legend: [ ] pending, [~] in progress, [x] done (PR merged + issue closed)
 - [x] #76 CraveCrushers follow-ups (5 sub-fixes) — branch `issue-76-cravecrushers-followups`
 - [x] #47 Chat backend gap-fill (tap-out-request message type) — branch `issue-47-chat-tapout-message-type` (needs manual SQL migration on live project, see PR)
 - [x] #51 Push notification service (VAPID, push_subscriptions, edge fn stub) — branch `issue-51-push-notifications` (needs manual SQL migration + edge fn deploy + VAPID secrets, see PR)
-- [ ] #48 Help alert workflow + dispatch — branch `issue-48-help-alert-workflow`
+- [x] #48 Help alert workflow + dispatch — branch `issue-48-help-alert-workflow`
 - [ ] #50 Tap-out request/approval/undo — branch `issue-50-tapout-workflow`
 - [ ] #49 Notification preferences + in-app center — branch `issue-49-notification-center`
 - [ ] #69 Mobile DrawerNav — branch `issue-69-mobile-drawernav`

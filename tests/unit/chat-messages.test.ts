@@ -26,6 +26,7 @@ describe('mapMessageRow', () => {
       text: 'hello',
       time: expect.any(String),
       isMe: false,
+      type: 'normal',
     });
   });
 
@@ -49,7 +50,7 @@ describe('mapMessageRow', () => {
 });
 
 describe('shouldShowAuthorName', () => {
-  const base: DisplayMessage = { id: 'a', authorId: 'user-1', from: 'alex_quit', text: 'hi', time: '8:00 AM', isMe: false };
+  const base: DisplayMessage = { id: 'a', authorId: 'user-1', from: 'alex_quit', text: 'hi', time: '8:00 AM', isMe: false, type: 'normal' };
 
   it('is true for the first message from another author', () => {
     expect(shouldShowAuthorName([base], 0)).toBe(true);

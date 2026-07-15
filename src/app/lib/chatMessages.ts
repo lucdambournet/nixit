@@ -20,6 +20,7 @@ export type DisplayMessage = {
   text: string;
   time: string;
   isMe: boolean;
+  type: ChatMessageRow['type'];
 };
 
 export function mapMessageRow(row: ChatMessageRow, author: AuthorInfo | undefined, currentUserId: string): DisplayMessage {
@@ -30,6 +31,7 @@ export function mapMessageRow(row: ChatMessageRow, author: AuthorInfo | undefine
     text: row.text,
     time: new Date(row.created_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }),
     isMe: row.author_id === currentUserId,
+    type: row.type,
   };
 }
 
