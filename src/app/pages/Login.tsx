@@ -26,9 +26,18 @@ function Login() {
     if (!data?.user) { setError('Login succeeded but no session was returned.'); setLoading(false); return; }
     const { data: userData } = await supabase
       .from('users')
-      .select('active_cohort_id')
+      .select('active_cohort_id, username')
       .eq('id', data.user.id)
       .single();
+
+    // The profile row can be created by a DB trigger before email confirmation,
+    // defaulting username to the email prefix. Reconcile it with the username
+    // chosen at signup (stored as auth user metadata) on first login.
+    const metadataUsername = data.user.user_metadata?.username as string | undefined;
+    if (metadataUsername && userData?.username !== metadataUsername) {
+      await supabase.from('users').update({ username: metadataUsername }).eq('id', data.user.id);
+    }
+
     navigate(userData?.active_cohort_id ? '/dashboard' : '/enrollment');
   };
 

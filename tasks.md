@@ -2,7 +2,7 @@
 
 Legend: [ ] pending, [~] in progress, [x] done (PR merged + issue closed)
 
-- [ ] #22 QA unit tests auth/join — branch `issue-22-auth-join-unit-tests`
+- [x] #22 QA unit tests auth/join — branch `issue-22-auth-join-unit-tests` (PR #78)
 - [ ] #23 QA integration test signup→join→dashboard — branch `issue-23-signup-join-dashboard-e2e`
 - [ ] #76 CraveCrushers follow-ups (5 sub-fixes) — branch `issue-76-cravecrushers-followups`
 - [ ] #47 Chat backend gap-fill (tap-out-request message type) — branch `issue-47-chat-tapout-message-type`
