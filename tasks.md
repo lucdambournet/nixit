@@ -8,7 +8,7 @@ Legend: [ ] pending, [~] in progress, [x] done (PR merged + issue closed)
 - [x] #47 Chat backend gap-fill (tap-out-request message type) — branch `issue-47-chat-tapout-message-type` (needs manual SQL migration on live project, see PR)
 - [x] #51 Push notification service (VAPID, push_subscriptions, edge fn stub) — branch `issue-51-push-notifications` (needs manual SQL migration + edge fn deploy + VAPID secrets, see PR)
 - [x] #48 Help alert workflow + dispatch — branch `issue-48-help-alert-workflow`
-- [ ] #50 Tap-out request/approval/undo — branch `issue-50-tapout-workflow`
+- [x] #50 Tap-out request/approval/undo — branch `issue-50-tapout-workflow` (schema migrated live; also fixed a real double-count bug in member_count + broken DND grant, both pre-existing)
 - [ ] #49 Notification preferences + in-app center — branch `issue-49-notification-center`
 - [ ] #69 Mobile DrawerNav — branch `issue-69-mobile-drawernav`
 - [ ] #52 UI polish / responsive / onboarding transitions — branch `issue-52-ui-polish`

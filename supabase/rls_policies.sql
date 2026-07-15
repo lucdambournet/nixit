@@ -96,7 +96,61 @@ create policy "cohort members can send messages as themselves"
     and cohort_id in (select get_my_cohort_ids())
   );
 
-alter publication supabase_realtime add table public.chat_messages;
+do $$
+begin
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'chat_messages'
+  ) then
+    alter publication supabase_realtime add table public.chat_messages;
+  end if;
+end $$;
+
+-- ── tap_out_requests / tap_out_approvals: read-only to clients (#50) ──
+-- All writes go through request_tap_out()/approve_tap_out_request()/
+-- undo_tap_out_request(), which are security definer and bypass RLS the
+-- same way join_cohort/leave_cohort already do — no INSERT/UPDATE/DELETE
+-- grants needed here.
+alter table public.tap_out_requests  enable row level security;
+alter table public.tap_out_approvals enable row level security;
+
+grant select on table public.tap_out_requests  to authenticated;
+grant select on table public.tap_out_approvals to authenticated;
+grant all on table public.tap_out_requests, public.tap_out_approvals to service_role;
+
+-- Includes `or requester_id = auth.uid()` so a requester whose tap-out just
+-- got approved (their cohort_members row is deleted in the same
+-- transaction that sets status='approved') can still see their own
+-- now-resolved request — otherwise they'd lose SELECT visibility on it in
+-- the same instant it resolves, since get_my_cohort_ids() would no longer
+-- include that cohort.
+drop policy if exists "cohort members can read their cohort's tap-out requests" on public.tap_out_requests;
+create policy "cohort members can read their cohort's tap-out requests"
+  on public.tap_out_requests for select
+  to authenticated
+  using (cohort_id in (select get_my_cohort_ids()) or requester_id = (select auth.uid()));
+
+drop policy if exists "cohort members can read approvals for their cohort's requests" on public.tap_out_approvals;
+create policy "cohort members can read approvals for their cohort's requests"
+  on public.tap_out_approvals for select
+  to authenticated
+  using (request_id in (select id from public.tap_out_requests where cohort_id in (select get_my_cohort_ids())));
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'tap_out_requests'
+  ) then
+    alter publication supabase_realtime add table public.tap_out_requests;
+  end if;
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'tap_out_approvals'
+  ) then
+    alter publication supabase_realtime add table public.tap_out_approvals;
+  end if;
+end $$;
 
 -- ── push_subscriptions: strictly self-scoped (#51) ────────────
 alter table public.push_subscriptions enable row level security;
@@ -156,8 +210,13 @@ grant select on table public.daily_check_ins to authenticated;
 -- `update users set current_streak = ...` directly. record_check_in() is
 -- security definer, so it bypasses grants (runs as the function owner) and
 -- is unaffected by this revoke.
+-- `dnd` must stay in this list: without it, ProfileScreen's Do Not Disturb
+-- toggle (supabase.from('users').update({ dnd })) silently fails RLS's
+-- column-level grant check (discovered live via status-indicators.spec.ts
+-- while working on #50 — this predates that work, added when the streak
+-- columns were locked down and dnd was missed).
 revoke update on public.users from authenticated;
-grant update (username, profile_image_url) on public.users to authenticated;
+grant update (username, profile_image_url, dnd) on public.users to authenticated;
 
 -- ── craving_sessions: personal only, no cohort scoping ─────────
 grant select, insert on table public.craving_sessions to authenticated;

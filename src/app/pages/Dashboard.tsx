@@ -275,7 +275,7 @@ function ChatScreen({ user, cohort, members, presence, selfStatus, onToggleDnd }
 
     supabase
       .from('chat_messages')
-      .select('id, cohort_id, author_id, text, type, created_at')
+      .select('id, cohort_id, author_id, text, type, request_id, created_at')
       .eq('cohort_id', cohort.id)
       .order('created_at', { ascending: false })
       .limit(50)
@@ -396,6 +396,19 @@ function ChatScreen({ user, cohort, members, presence, selfStatus, onToggleDnd }
             );
           }
 
+          if (msg.type === 'tap-out-request' && msg.requestId) {
+            return (
+              <TapOutRequestBanner
+                key={msg.id}
+                requestId={msg.requestId}
+                requesterId={msg.authorId}
+                requesterName={msg.from}
+                currentUserId={user.id}
+                text={msg.text}
+              />
+            );
+          }
+
           return (
             <div key={msg.id} style={{ display: 'flex', flexDirection: 'column', alignItems: msg.isMe ? 'flex-end' : 'flex-start', marginBottom: 8 }}>
               {showName && (
@@ -435,6 +448,131 @@ function ChatScreen({ user, cohort, members, presence, selfStatus, onToggleDnd }
           />
         </div>
         <Button variant="primary" onClick={send} icon={<SendIcon />}>Send</Button>
+      </div>
+    </div>
+  );
+}
+
+/* ── Tap-out request banner (rendered in chat, #50) ── */
+type TapOutStatus = 'pending' | 'approved' | 'undone';
+
+function TapOutRequestBanner({ requestId, requesterId, requesterName, currentUserId, text }: {
+  requestId: string; requesterId: string; requesterName: string; currentUserId: string; text: string;
+}) {
+  const [status, setStatus] = useState<TapOutStatus>('pending');
+  const [approvalsCount, setApprovalsCount] = useState(0);
+  const [approvalsNeeded, setApprovalsNeeded] = useState(3);
+  const [hasApproved, setHasApproved] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const isRequester = requesterId === currentUserId;
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const refetch = async () => {
+      const [{ data: reqData }, { data: approvals }] = await Promise.all([
+        supabase.from('tap_out_requests').select('status, approvals_needed').eq('id', requestId).single(),
+        supabase.from('tap_out_approvals').select('approver_id').eq('request_id', requestId),
+      ]);
+      if (cancelled) return;
+      if (reqData) {
+        setStatus(reqData.status as TapOutStatus);
+        setApprovalsNeeded(reqData.approvals_needed);
+      }
+      if (approvals) {
+        setApprovalsCount(approvals.length);
+        setHasApproved(approvals.some(a => a.approver_id === currentUserId));
+      }
+    };
+
+    void refetch();
+
+    // Realtime is the fast path, but postgres_changes delivery isn't fully
+    // reliable across multiple concurrent inserts in practice — a short
+    // poll while pending guarantees this converges even if an event drops.
+    const channel = supabase
+      .channel(`tap-out-${requestId}`)
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'tap_out_requests', filter: `id=eq.${requestId}` },
+        () => void refetch()
+      )
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'tap_out_approvals', filter: `request_id=eq.${requestId}` },
+        () => void refetch()
+      )
+      .subscribe();
+
+    const interval = setInterval(() => void refetch(), 3000);
+
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+      supabase.removeChannel(channel);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [requestId, currentUserId]);
+
+  const handleApprove = async () => {
+    setBusy(true);
+    setError(null);
+    const { error: rpcError } = await supabase.rpc('approve_tap_out_request', { target_request_id: requestId });
+    setBusy(false);
+    if (rpcError) { setError(rpcError.message); return; }
+    setHasApproved(true);
+  };
+
+  const handleUndo = async () => {
+    setBusy(true);
+    setError(null);
+    const { error: rpcError } = await supabase.rpc('undo_tap_out_request', { target_request_id: requestId });
+    setBusy(false);
+    if (rpcError) setError(rpcError.message);
+  };
+
+  return (
+    <div role="status" style={{ display: 'flex', justifyContent: 'center', margin: '10px 0' }}>
+      <div style={{
+        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8,
+        background: 'rgba(111, 66, 193, 0.08)', border: '1px solid rgba(111, 66, 193, 0.3)',
+        borderRadius: 'var(--radius-lg)', padding: '12px 18px', maxWidth: 420, textAlign: 'center',
+      }}>
+        <span style={{ fontFamily: 'var(--font-body)', fontWeight: 600, fontSize: 'var(--text-sm)', color: 'var(--color-text)' }}>
+          🚪 {text}
+        </span>
+
+        {status === 'pending' && (
+          <>
+            <span style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)' }}>
+              {approvalsCount}/{approvalsNeeded} approvals
+            </span>
+            {isRequester ? (
+              <Button variant="outline" size="sm" onClick={handleUndo} disabled={busy}>
+                {busy ? 'Undoing…' : 'Undo request'}
+              </Button>
+            ) : (
+              <Button variant="outline" size="sm" onClick={handleApprove} disabled={busy || hasApproved}>
+                {hasApproved ? 'Approved ✓' : busy ? 'Approving…' : 'Approve'}
+              </Button>
+            )}
+          </>
+        )}
+        {status === 'approved' && (
+          <span style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)' }}>
+            Approved — {requesterName} has left the cohort.
+          </span>
+        )}
+        {status === 'undone' && (
+          <span style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)' }}>
+            Request withdrawn.
+          </span>
+        )}
+        {error && (
+          <span style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-xs)', color: '#c0392b' }}>{error}</span>
+        )}
       </div>
     </div>
   );
@@ -659,6 +797,43 @@ function Dashboard() {
     };
   }, [cohortId]);
 
+  // If my own tap-out request gets approved while I'm elsewhere in the app
+  // (not looking at the chat banner), still move me off to enrollment (#50).
+  useEffect(() => {
+    if (!userData?.id) return;
+    const userId = userData.id;
+
+    const checkForApprovedRequest = async () => {
+      const { data } = await supabase
+        .from('tap_out_requests')
+        .select('status')
+        .eq('requester_id', userId)
+        .eq('status', 'approved')
+        .order('resolved_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (data) navigate('/enrollment');
+    };
+
+    // Realtime is the fast path; a short poll is the reliable fallback (see
+    // the same note on TapOutRequestBanner's effect).
+    const channel = supabase
+      .channel(`tap-out-requester-${userId}`)
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'tap_out_requests', filter: `requester_id=eq.${userId}` },
+        () => void checkForApprovedRequest()
+      )
+      .subscribe();
+
+    const interval = setInterval(() => void checkForApprovedRequest(), 4000);
+
+    return () => {
+      clearInterval(interval);
+      supabase.removeChannel(channel);
+    };
+  }, [userData?.id, navigate]);
+
   const toggleDnd = async (next: boolean): Promise<boolean> => {
     if (!userData) return false;
     const prev = userData.dnd;
@@ -751,10 +926,22 @@ function Dashboard() {
             onGoToChat={() => setPage('chat')}
             onGoToCrave={() => setPage('crave')}
             onTapOut={async () => {
-              if (!confirm('Are you sure you want to tap out? This removes you from the cohort.')) return;
-              const { error } = await supabase.rpc('leave_cohort');
+              const cohortHasStarted = Date.now() >= new Date(startDate).getTime();
+
+              if (!cohortHasStarted) {
+                // Hasn't started yet: a simple change-of-mind, no cohort approval needed.
+                if (!confirm('Are you sure you want to leave this cohort?')) return;
+                const { error } = await supabase.rpc('leave_cohort');
+                if (error) { alert(error.message); return; }
+                navigate('/enrollment');
+                return;
+              }
+
+              // Already underway: tapping out needs cohort approval (#50).
+              if (!confirm("Request to tap out? Your cohort will need to approve it before you're removed. You can undo the request any time before then.")) return;
+              const { error } = await supabase.rpc('request_tap_out');
               if (error) { alert(error.message); return; }
-              navigate('/enrollment');
+              setPage('chat');
             }}
             onSendHelpAlert={async () => {
               if (!confirm('Send a help alert to your cohort? Everyone will see it in chat and be notified.')) return false;
