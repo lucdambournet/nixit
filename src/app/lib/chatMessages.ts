@@ -3,7 +3,7 @@ export type ChatMessageRow = {
   cohort_id: string;
   author_id: string;
   text: string;
-  type: 'normal' | 'help-alert';
+  type: 'normal' | 'help-alert' | 'tap-out-request';
   created_at: string;
 };
 

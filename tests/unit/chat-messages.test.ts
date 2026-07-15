@@ -40,6 +40,12 @@ describe('mapMessageRow', () => {
 
     expect(result.from).toBe('Member');
   });
+
+  it('maps a tap-out-request row same as any other message type', () => {
+    const result = mapMessageRow(makeRow({ type: 'tap-out-request', text: 'requested to tap out' }), author, 'user-2');
+
+    expect(result.text).toBe('requested to tap out');
+  });
 });
 
 describe('shouldShowAuthorName', () => {
