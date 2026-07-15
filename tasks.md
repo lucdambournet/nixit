@@ -5,7 +5,7 @@ Legend: [ ] pending, [~] in progress, [x] done (PR merged + issue closed)
 - [x] #22 QA unit tests auth/join — branch `issue-22-auth-join-unit-tests` (PR #78)
 - [ ] #23 QA integration test signup→join→dashboard — branch `issue-23-signup-join-dashboard-e2e`
 - [x] #76 CraveCrushers follow-ups (5 sub-fixes) — branch `issue-76-cravecrushers-followups`
-- [ ] #47 Chat backend gap-fill (tap-out-request message type) — branch `issue-47-chat-tapout-message-type`
+- [x] #47 Chat backend gap-fill (tap-out-request message type) — branch `issue-47-chat-tapout-message-type` (needs manual SQL migration on live project, see PR)
 - [ ] #51 Push notification service (VAPID, push_subscriptions, edge fn stub) — branch `issue-51-push-notifications`
 - [ ] #48 Help alert workflow + dispatch — branch `issue-48-help-alert-workflow`
 - [ ] #50 Tap-out request/approval/undo — branch `issue-50-tapout-workflow`

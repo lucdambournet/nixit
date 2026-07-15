@@ -98,6 +98,13 @@ create table if not exists chat_messages (
 create index if not exists idx_chat_messages_cohort_created
   on chat_messages(cohort_id, created_at);
 
+-- Widen chat_messages.type to support tap-out-request messages (#47, used by #50).
+-- `create table if not exists` above is a no-op against an already-created
+-- table, so re-run this against existing installations to pick up the change.
+alter table chat_messages drop constraint if exists chat_messages_type_check;
+alter table chat_messages add constraint chat_messages_type_check
+  check (type in ('normal', 'help-alert', 'tap-out-request'));
+
 -- Online status: manual Do Not Disturb override. Online/away/offline are
 -- derived live from presence and never persisted.
 alter table public.users
