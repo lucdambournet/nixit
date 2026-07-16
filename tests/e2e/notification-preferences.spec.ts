@@ -19,6 +19,17 @@ const USER_A = { email: 'e2e_notifprefs_a@nixit.dev', password: 'testpass123', u
 const USER_B = { email: 'e2e_notifprefs_b@nixit.dev', password: 'testpass123', username: 'e2e_notif_b' };
 
 let cohortId: string;
+let nixDateId: string;
+
+// Dedicated, disposable cohort — not the shared "earliest upcoming" one —
+// so this spec's blanket `chat_messages` cleanup can't race with other
+// spec files that happen to share that cohort under parallel workers.
+async function createIsolatedCohort(): Promise<{ nixDateId: string; cohortId: string }> {
+  const month = `notif-prefs-test-${Date.now()}`;
+  const { data: nixDate } = await admin.from('nix_dates').insert({ month, start_date: '2099-01-01' }).select('id').single();
+  const { data: cohort } = await admin.from('cohorts').insert({ nix_date_id: nixDate!.id, start_date: '2099-01-01', max_members: 25 }).select('id').single();
+  return { nixDateId: nixDate!.id, cohortId: cohort!.id };
+}
 
 async function resetUser(user: typeof USER_A): Promise<string> {
   const { data: { users } } = await admin.auth.admin.listUsers();
@@ -43,19 +54,13 @@ async function login(page: Page, user: typeof USER_A) {
 }
 
 test.beforeAll(async () => {
-  const { data: cohort } = await admin
-    .from('cohorts')
-    .select('id')
-    .eq('status', 'upcoming')
-    .order('start_date', { ascending: true })
-    .limit(1)
-    .single();
-  cohortId = cohort!.id;
+  const cohort = await createIsolatedCohort();
+  cohortId = cohort.cohortId;
+  nixDateId = cohort.nixDateId;
 
   const idA = await resetUser(USER_A);
   const idB = await resetUser(USER_B);
 
-  await admin.from('chat_messages').delete().eq('cohort_id', cohortId);
   await admin.from('users').upsert([
     { id: idA, email: USER_A.email, username: USER_A.username, active_cohort_id: cohortId },
     { id: idB, email: USER_B.email, username: USER_B.username, active_cohort_id: cohortId },
@@ -67,7 +72,6 @@ test.beforeAll(async () => {
 });
 
 test.afterAll(async () => {
-  await admin.from('chat_messages').delete().eq('cohort_id', cohortId);
   for (const user of [USER_A, USER_B]) {
     const { data: { users } } = await admin.auth.admin.listUsers();
     const existing = users.find(entry => entry.email === user.email);
@@ -78,6 +82,9 @@ test.afterAll(async () => {
       await admin.auth.admin.deleteUser(existing.id);
     }
   }
+  await admin.from('chat_messages').delete().eq('cohort_id', cohortId);
+  await admin.from('cohorts').delete().eq('id', cohortId);
+  await admin.from('nix_dates').delete().eq('id', nixDateId);
 });
 
 test.describe('Notification preferences', () => {
