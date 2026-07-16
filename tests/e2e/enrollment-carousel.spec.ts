@@ -109,6 +109,26 @@ test.describe('Enrollment page — cohort carousel', () => {
     await expect.poll(() => track.evaluate(el => el.scrollLeft)).toBeLessThan(afterNextScrollLeft);
   });
 
+  test('prev/next arrows sit clear of the cards, not overlapping their content (issue #84)', async ({ page }) => {
+    const cards = page.locator('[data-carousel-card]');
+    await expect(cards.first()).toBeVisible();
+    test.skip((await cards.count()) < 2, 'need at least 2 seeded cohorts to verify arrow placement');
+
+    const prevButton = page.getByRole('button', { name: 'Scroll to previous cohort' });
+    const prevBox = await prevButton.boundingBox();
+    const firstCardBox = await cards.first().boundingBox();
+    expect(prevBox).not.toBeNull();
+    expect(firstCardBox).not.toBeNull();
+    // The arrow's right edge must not reach past the card's left edge.
+    expect(prevBox!.x + prevBox!.width).toBeLessThanOrEqual(firstCardBox!.x - 2);
+  });
+
+  test('arrows are hidden on mobile — swipe is the only affordance there', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await expect(page.getByRole('button', { name: 'Scroll to previous cohort' })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Scroll to next cohort' })).toHaveCount(0);
+  });
+
   test('mobile viewport: swipe gesture scrolls the carousel', async ({ page, browserName }) => {
     test.skip(browserName !== 'chromium', 'CDP touch dispatch is only wired up for chromium');
 

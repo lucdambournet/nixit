@@ -586,6 +586,7 @@ function DatesScreen({ activeCohortStart }: { activeCohortStart: string }) {
   const [toast, setToast] = useState<{ type: 'success' | 'error'; msg: string } | null>(null);
   const navigate = useNavigate();
   const trackRef = useRef<HTMLDivElement>(null);
+  const isMobile = useIsMobile();
 
   const scrollByCard = (dir: -1 | 1) => {
     const track = trackRef.current;
@@ -639,7 +640,7 @@ function DatesScreen({ activeCohortStart }: { activeCohortStart: string }) {
           No upcoming cohorts yet.
         </div>
       ) : (
-        <div style={{ position: 'relative' }}>
+        <div style={{ position: 'relative', margin: isMobile ? '0' : '0 44px' }}>
           <div
             ref={trackRef}
             className="nixit-carousel"
@@ -669,13 +670,13 @@ function DatesScreen({ activeCohortStart }: { activeCohortStart: string }) {
             })}
           </div>
 
-          {cohorts.length > 1 && (
+          {!isMobile && cohorts.length > 1 && (
             <>
               <button
                 aria-label="Scroll to previous cohort"
                 onClick={() => scrollByCard(-1)}
                 style={{
-                  position: 'absolute', top: '50%', left: -8, transform: 'translateY(-50%)',
+                  position: 'absolute', top: '50%', left: -40, transform: 'translateY(-50%)',
                   width: 34, height: 34, borderRadius: '50%', border: '1px solid var(--color-border-subtle)',
                   background: 'var(--surface-card)', color: 'var(--color-text-secondary)', boxShadow: 'var(--shadow-sm)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
@@ -687,7 +688,7 @@ function DatesScreen({ activeCohortStart }: { activeCohortStart: string }) {
                 aria-label="Scroll to next cohort"
                 onClick={() => scrollByCard(1)}
                 style={{
-                  position: 'absolute', top: '50%', right: -8, transform: 'translateY(-50%)',
+                  position: 'absolute', top: '50%', right: -40, transform: 'translateY(-50%)',
                   width: 34, height: 34, borderRadius: '50%', border: '1px solid var(--color-border-subtle)',
                   background: 'var(--surface-card)', color: 'var(--color-text-secondary)', boxShadow: 'var(--shadow-sm)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
